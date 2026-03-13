@@ -38,6 +38,9 @@
     <ClInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="ChessUI.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Chess.rc">
@@ -51,5 +54,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="IP.txt" />
+    <Text Include="TODO list.txt" />
   </ItemGroup>
 </Project>

@@ -19,9 +19,17 @@ int main() {
 				window.close();
 			}
 
-			if (event.type == sf::Event::MouseButtonPressed) 
-				if(game.handleClick(event) && playMode == 1)
-					game.toggleCurrentPlayersColor();
+			if (event.type == sf::Event::MouseButtonPressed)
+				switch (game.handleClick(event)) 
+				{
+				case ChessApp::Signal::ToSendMove:
+					if (game.sendLastMove() && playMode == ChessApp::GameMode::SingleScreen)
+						game.toggleCurrentPlayersColor();
+					break;
+				case ChessApp::Signal::ToPassToUI:
+					//Some bs with UI idk
+					break;
+				}
 		}
 		
 		window.clear(sf::Color::Black);

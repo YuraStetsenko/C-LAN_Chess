@@ -294,7 +294,7 @@ public:
 	}
 
 	bool sendMove( Move& move) {
-		if (!are_bothPlayersPresent)
+		if (!are_bothPlayersPresent)  //TODO:: add are_bothPlayersPresent flag to the logic of reconnection
 			return false;
 
 		if (board.isWhitesMove() != is_thisPlayerWhite)

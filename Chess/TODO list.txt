@@ -1,0 +1,29 @@
++I need independently written, easily connectable and reliable:
+- Chess logic
+- Client side
+- Server side
+- UI
+
+
+
+General:
+!!!Make En Passant correct!!!!
+- Fucking Menu, buttons, navigation, etc.
+- Display previous moves
+- Make Premoves
+
+
+
+Multiplayer:
+- Possibility to play online using a server hosted on some free hosting in a container
+- Code for a separate node for a server
+- Room selection by Name/ID/IP
+- Resign button
+- Reconnection
+- Left timeout/wait for the player to reconnect
+- Chat
+- (Later) Accounts, authorisation
+
+
+****** UI must be some kind of a private implementation within Chess App, not just be within fucntions, that's kinda stupid, no?
+

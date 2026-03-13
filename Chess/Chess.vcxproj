@@ -141,6 +141,7 @@
     <ClInclude Include="ChessBoard.hpp" />
     <ClInclude Include="ChessApp.hpp" />
     <ClInclude Include="ChessPiece.hpp" />
+    <ClInclude Include="ChessUI.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Room.hpp" />
     <ClInclude Include="Move.hpp" />
@@ -153,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="IP.txt" />
+    <Text Include="TODO list.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
