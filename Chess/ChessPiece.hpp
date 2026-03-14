@@ -8,14 +8,14 @@ private:
 	PieceType type;
 	friend class ChessBoard;
 
-	std::vector<std::pair<unsigned, unsigned>> attackedSquares;
-	std::vector<std::pair<unsigned, unsigned>> possibleMoves;
-	std::vector<std::pair<unsigned, unsigned>> illegalMoves;
+	std::set<std::pair<unsigned, unsigned>> attackedSquares;
+	std::set<std::pair<unsigned, unsigned>> availableMoves;
+	std::set<std::pair<unsigned, unsigned>> illegalMoves;
 
 	void updatePawnMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position)
 	{
 		attackedSquares.clear();
-		possibleMoves.clear();
+		availableMoves.clear();
 
 		unsigned i = position.first, j = position.second;
 
@@ -24,31 +24,31 @@ private:
 
 		if (white) {
 			if ( i > 0 && !CREFboard[i - 1][j]) {
-				possibleMoves.push_back({ i - 1,j });
+				availableMoves.insert({ i - 1,j });
 				if (i == 6 && !CREFboard[i - 2][j])
-					possibleMoves.push_back({ i - 2,j });
+					availableMoves.insert({ i - 2,j });
 			}
 
 			if (i > 0) {
 				if(j > 0)
-					attackedSquares.push_back({ i - 1,j - 1 });
+					attackedSquares.insert({ i - 1,j - 1 });
 				if(j < 7)
-					attackedSquares.push_back({ i - 1,j + 1 });
+					attackedSquares.insert({ i - 1,j + 1 });
 			}
 		}
 
 		if (!white) {
 			if (i < 7 && !CREFboard[i + 1][j]) {
-				possibleMoves.push_back({ i + 1,j });
+				availableMoves.insert({ i + 1,j });
 				if (i == 1 && !CREFboard[i + 2][j])
-					possibleMoves.push_back({ i + 2,j });
+					availableMoves.insert({ i + 2,j });
 			}
 
 			if (i > 0) {
 				if (j > 0)
-					attackedSquares.push_back({ i + 1,j - 1 });
+					attackedSquares.insert({ i + 1,j - 1 });
 				if (j < 7)
-					attackedSquares.push_back({ i + 1,j + 1 });
+					attackedSquares.insert({ i + 1,j + 1 });
 			}
 		}
 
@@ -57,7 +57,7 @@ private:
 	}
 	void updateKnightMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		attackedSquares.clear();
-		possibleMoves.clear();
+		availableMoves.clear();
 		
 		unsigned i = position.first, j = position.second;
 
@@ -69,20 +69,20 @@ private:
 			for (int b = 0; b < 5; b += 4)
 				if (i + 1 + a <= 7 &&
 					j - 2 + b <= 7)
-					attackedSquares.push_back({ i + 1 + a, j - 2 + b });
+					attackedSquares.insert({ i + 1 + a, j - 2 + b });
 
 		for (int a = 0; a >-5; a -= 4)
 			for (int b = 0; b < 3; b += 2)
 				if (i + 2 + a <= 7 &&
 					j - 1 + b <= 7)
-					attackedSquares.push_back({ i + 2 + a, j - 1 + b });
+					attackedSquares.insert({ i + 2 + a, j - 1 + b });
 
 
 
 	}
 	void updateBishopMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		attackedSquares.clear();
-		possibleMoves.clear();
+		availableMoves.clear();
 		
 		unsigned a, i = a = position.first, b, j = b = position.second;
 
@@ -91,7 +91,7 @@ private:
 
 		a++, b++;
 		while (a <= 7 && b <= 7) {
-			attackedSquares.push_back({ a,b });
+			attackedSquares.insert({ a,b });
 
 			if (CREFboard[a++][b++])
 				break;
@@ -99,7 +99,7 @@ private:
 		a = i; b = j;
 		a--, b--;
 		while (a <= 7 && b <= 7) {
-			attackedSquares.push_back({ a,b });
+			attackedSquares.insert({ a,b });
 
 			if (CREFboard[a--][b--])
 				break;
@@ -107,7 +107,7 @@ private:
 		a = i; b = j;
 		a++, b--;
 		while (a <= 7 && b <= 7) {
-			attackedSquares.push_back({ a,b });
+			attackedSquares.insert({ a,b });
 
 			if (CREFboard[a++][b--])
 				break;
@@ -115,7 +115,7 @@ private:
 		a = i; b = j;
 		a--, b++;
 		while (a <= 7 && b <= 7) {
-			attackedSquares.push_back({ a,b });
+			attackedSquares.insert({ a,b });
 
 			if (CREFboard[a--][b++])
 				break;
@@ -124,7 +124,7 @@ private:
 	}
 	void updateRookMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		attackedSquares.clear();
-		possibleMoves.clear();
+		availableMoves.clear();
 		
 		unsigned a, i = a = position.first, j = position.second;
 
@@ -133,7 +133,7 @@ private:
 
 		a++;
 		while (a <= 7) {
-			attackedSquares.push_back({ a,j });
+			attackedSquares.insert({ a,j });
 
 			if (CREFboard[a++][j])
 				break;
@@ -141,7 +141,7 @@ private:
 		a = i;
 		a--;
 		while (a <= 7) {
-			attackedSquares.push_back({ a,j });
+			attackedSquares.insert({ a,j });
 
 			if (CREFboard[a--][j])
 				break;
@@ -149,7 +149,7 @@ private:
 		a = j;
 		a++;
 		while (a <= 7) {
-			attackedSquares.push_back({ i,a });
+			attackedSquares.insert({ i,a });
 
 			if (CREFboard[i][a++])
 				break;
@@ -157,7 +157,7 @@ private:
 		a = j;
 		a--;
 		while (a <= 7) {
-			attackedSquares.push_back({ i,a });
+			attackedSquares.insert({ i,a });
 
 			if (CREFboard[i][a--])
 				break;
@@ -166,7 +166,7 @@ private:
 	}
 	void updateQueenMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		attackedSquares.clear();
-		possibleMoves.clear();
+		availableMoves.clear();
 		
 		unsigned a, i = a = position.first, b, j = b = position.second;
 
@@ -175,7 +175,7 @@ private:
 
 		a++, b++;
 		while (a <= 7 && b <= 7) {
-			attackedSquares.push_back({ a,b });
+			attackedSquares.insert({ a,b });
 
 			if (CREFboard[a++][b++])
 				break;
@@ -183,7 +183,7 @@ private:
 		a = i; b = j;
 		a--, b--;
 		while (a <= 7 && b <= 7) {
-			attackedSquares.push_back({ a,b });
+			attackedSquares.insert({ a,b });
 
 			if (CREFboard[a--][b--])
 				break;
@@ -191,7 +191,7 @@ private:
 		a = i; b = j;
 		a++, b--;
 		while (a <= 7 && b <= 7) {
-			attackedSquares.push_back({ a,b });
+			attackedSquares.insert({ a,b });
 
 			if (CREFboard[a++][b--])
 				break;
@@ -199,7 +199,7 @@ private:
 		a = i; b = j;
 		a--, b++;
 		while (a <= 7 && b <= 7) {
-			attackedSquares.push_back({ a,b });
+			attackedSquares.insert({ a,b });
 
 			if (CREFboard[a--][b++])
 				break;
@@ -209,7 +209,7 @@ private:
 		a = i;
 		a++;
 		while (a <= 7) {
-			attackedSquares.push_back({ a,j });
+			attackedSquares.insert({ a,j });
 
 			if (CREFboard[a++][j])
 				break;
@@ -217,7 +217,7 @@ private:
 		a = i;
 		a--;
 		while (a <= 7) {
-			attackedSquares.push_back({ a,j });
+			attackedSquares.insert({ a,j });
 
 			if (CREFboard[a--][j])
 				break;
@@ -225,7 +225,7 @@ private:
 		a = j;
 		a++;
 		while (a <= 7) {
-			attackedSquares.push_back({ i,a });
+			attackedSquares.insert({ i,a });
 
 			if (CREFboard[i][a++])
 				break;
@@ -233,7 +233,7 @@ private:
 		a = j;
 		a--;
 		while (a <= 7) {
-			attackedSquares.push_back({ i,a });
+			attackedSquares.insert({ i,a });
 
 			if (CREFboard[i][a--])
 				break;
@@ -242,7 +242,7 @@ private:
 	}
 	void updateKingMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		attackedSquares.clear();
-		possibleMoves.clear();
+		availableMoves.clear();
 		
 		unsigned i = position.first, j = position.second;
 
@@ -252,7 +252,7 @@ private:
 		for (int a = -1; a < 2; a++)
 			for (int b = -1; b < 2; b++)
 				if (!(a == 0 && b == 0) && i + a <= 7 && j + b <= 7)
-					attackedSquares.push_back({ i + a, j + b });
+					attackedSquares.insert({ i + a, j + b });
 
 	}
 
@@ -265,7 +265,7 @@ private:
 			updatePawnMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (CREFboard[attacked.first][attacked.second] && white != CREFboard[attacked.first][attacked.second]->white)
-					possibleMoves.push_back(attacked);
+					availableMoves.insert(attacked);
 
 			//en passant???
 			//Promotion???
@@ -274,31 +274,31 @@ private:
 			updateKnightMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					possibleMoves.push_back(attacked);
+					availableMoves.insert(attacked);
 			break;
 		case Bishop:
 			updateBishopMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					possibleMoves.push_back(attacked);
+					availableMoves.insert(attacked);
 			break;
 		case Rook:
 			updateRookMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					possibleMoves.push_back(attacked);
+					availableMoves.insert(attacked);
 			break;
 		case Queen:
 			updateQueenMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					possibleMoves.push_back(attacked);
+					availableMoves.insert(attacked);
 			break;
 		case King:
 			updateKingMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					possibleMoves.push_back(attacked);
+					availableMoves.insert(attacked);
 
 
 			//Castling???
@@ -314,7 +314,7 @@ private:
 
 
 	//Only use after all of the moves are updated
-	void setPossibleMoves(const std::vector<std::pair<unsigned, unsigned>>& newMoves){
+	void setIllegalMoves(const std::set<std::pair<unsigned, unsigned>>& newMoves){
 		illegalMoves = newMoves;
 	}
 
@@ -336,11 +336,11 @@ public:
 
 	
 
-	const std::vector<std::pair<unsigned, unsigned>>& getAttackedSquares() const {
+	const std::set<std::pair<unsigned, unsigned>>& getAttackedSquares() const {
 		return attackedSquares;
 	}
-	 std::vector<std::pair<unsigned, unsigned>>& getPieceMoves() {
-		return possibleMoves;
+	 std::set<std::pair<unsigned, unsigned>>& getPieceMoves() {
+		return availableMoves;
 	}
 
 

@@ -7,7 +7,11 @@
 
 
 General:
+!!!!!!!Figure out the mess with ChessPiece class and moves...
+
 !!!Make En Passant correct!!!!
+!!!Make prmotoion!!!
+!!!Add a fucking checkmate and a stalemate!!!
 - Fucking Menu, buttons, navigation, etc.
 - Display previous moves
 - Make Premoves
