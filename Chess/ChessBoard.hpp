@@ -65,11 +65,16 @@ private:
 		playBoard[i_from][j_from] = playBoard[i_to][j_to]; //return the piece back to the starting cell
 		playBoard[i_to][j_to] = NULL;
 		
-		if (move.ptTo == Castling)
+		if (move.ptTo != EmptyCell)
 		{
-			revertMove(
-				j_to == 1 ? Move({ {i_to, 0}, {i_to, 2}, Rook, EmptyCell })
-										: Move({ {i_to, 7}, {i_to, 4}, Rook, EmptyCell }),
+			playBoard[i_to][j_to] = new ChessPiece(move.ptTo, !wasLastWhite);
+			pieces.insert(playBoard[i_to][j_to]);
+		}
+		else if (move.ptTo == Castling)
+		{
+			revertMove
+			(
+				(j_to == 1) ? Move({ {i_to, 0}, {i_to, 2}, Rook, EmptyCell }) : Move({ {i_to, 7}, {i_to, 4}, Rook, EmptyCell }),
 				wasLastWhite
 			);
 		}
@@ -87,11 +92,6 @@ private:
 		else if (move.ptTo == Promotion)
 		{
 			//TODO:: logic for Promotion
-		}
-		else if (move.ptTo != EmptyCell)
-		{
-			playBoard[i_to][j_to] = new ChessPiece(move.ptTo, !wasLastWhite);
-			pieces.insert(playBoard[i_to][j_to]);
 		}
 		
 	}
@@ -133,10 +133,11 @@ private:
 		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
 		auto& king = (isWhitesTurn ? white_king : black_king);
 
+		//(kill the piece that standed there if there was one)
 		if (playBoard[i_to][j_to]) 
 		{
 			delete playBoard[i_to][j_to];
-			pieces.erase(playBoard[i_to][j_to]); //(kill the piece that standed there if there was one)
+			pieces.erase(playBoard[i_to][j_to]); 
 		}
 
 		//move the piece from "from" to "to"... 
@@ -165,8 +166,10 @@ private:
 	bool isMoveValid(const Move& move) 
 	{
 		auto& king = (isWhitesTurn ? white_king : black_king);
+		const auto& attackedByEnemyCells = (isWhitesTurn ? attackedByBlackCells : attackedByWhiteCells);
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
 		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
+
 
 		if (!areMovePositionsValid(move))
 			return false;
@@ -178,13 +181,12 @@ private:
 
 		//apply the move to see whether a the king of the moving color is under attack now, making the move invalid
 		applyAssumedMove(move);	
-		updateAllPotentialMoves();
-		updateChecks();
+		updatePieceMoves();
 
-		if (isWhitesTurn ? whiteUnderCheck : blackUnderCheck)
+		if (attackedByEnemyCells.find(king) != attackedByEnemyCells.end())
 		{
 			revertMove(move, isWhitesTurn); //revert the board to the initial state
-			updateAllPotentialMoves();
+			updatePieceMoves();
 
 			if (move.ptFrom == King)
 				king = { i_from, j_from };
@@ -194,7 +196,7 @@ private:
 		
 		//revert the board to the initial state
 		revertMove(move, isWhitesTurn); 
-		updateAllPotentialMoves();
+		updatePieceMoves();
 
 		if (move.ptFrom == King)
 			king = { i_from, j_from }; //save king pos if necessary
@@ -319,7 +321,7 @@ private:
 
 	}
 
-	void updateAllPotentialMoves(){
+	void updatePieceMoves(){
 		attackedByBlackCells.clear();
 		attackedByWhiteCells.clear();
 
@@ -473,7 +475,7 @@ public:
 	}
 
 	void updateAvailableMoves() {
-		updateAllPotentialMoves();
+		updatePieceMoves();
 		updateLegalMoves();
 		updateChecks();
 		updateCastlingMoves();
