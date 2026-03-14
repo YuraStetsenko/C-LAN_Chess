@@ -1,0 +1,5 @@
+
+updatePieceMoves() updates all the pieces' sets of both availableMoves and attackedSquares.
+To look for the checks we actually only need to update the attacked squares, so let's make a separate function to use in the isMoveValid(), so it doesn't mess up availableMoves sets.
+
+I need a function for ChessPiece that only checks whether a piece puts a check on the enemy.

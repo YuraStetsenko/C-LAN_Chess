@@ -9,13 +9,14 @@ private:
 	friend class ChessBoard;
 
 	std::set<std::pair<unsigned, unsigned>> attackedSquares;
-	std::set<std::pair<unsigned, unsigned>> availableMoves;
+	std::set<std::pair<unsigned, unsigned>> potentialMoves;
+	std::set<std::pair<unsigned, unsigned>> legalMoves;
 	std::set<std::pair<unsigned, unsigned>> illegalMoves;
 
 	void updatePawnMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position)
 	{
 		attackedSquares.clear();
-		availableMoves.clear();
+		potentialMoves.clear();
 
 		unsigned i = position.first, j = position.second;
 
@@ -24,9 +25,9 @@ private:
 
 		if (white) {
 			if ( i > 0 && !CREFboard[i - 1][j]) {
-				availableMoves.insert({ i - 1,j });
+				potentialMoves.insert({ i - 1,j });
 				if (i == 6 && !CREFboard[i - 2][j])
-					availableMoves.insert({ i - 2,j });
+					potentialMoves.insert({ i - 2,j });
 			}
 
 			if (i > 0) {
@@ -39,9 +40,9 @@ private:
 
 		if (!white) {
 			if (i < 7 && !CREFboard[i + 1][j]) {
-				availableMoves.insert({ i + 1,j });
+				potentialMoves.insert({ i + 1,j });
 				if (i == 1 && !CREFboard[i + 2][j])
-					availableMoves.insert({ i + 2,j });
+					potentialMoves.insert({ i + 2,j });
 			}
 
 			if (i > 0) {
@@ -57,7 +58,7 @@ private:
 	}
 	void updateKnightMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		attackedSquares.clear();
-		availableMoves.clear();
+		potentialMoves.clear();
 		
 		unsigned i = position.first, j = position.second;
 
@@ -82,7 +83,7 @@ private:
 	}
 	void updateBishopMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		attackedSquares.clear();
-		availableMoves.clear();
+		potentialMoves.clear();
 		
 		unsigned a, i = a = position.first, b, j = b = position.second;
 
@@ -124,7 +125,7 @@ private:
 	}
 	void updateRookMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		attackedSquares.clear();
-		availableMoves.clear();
+		potentialMoves.clear();
 		
 		unsigned a, i = a = position.first, j = position.second;
 
@@ -166,7 +167,7 @@ private:
 	}
 	void updateQueenMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		attackedSquares.clear();
-		availableMoves.clear();
+		potentialMoves.clear();
 		
 		unsigned a, i = a = position.first, b, j = b = position.second;
 
@@ -242,7 +243,7 @@ private:
 	}
 	void updateKingMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		attackedSquares.clear();
-		availableMoves.clear();
+		potentialMoves.clear();
 		
 		unsigned i = position.first, j = position.second;
 
@@ -257,7 +258,7 @@ private:
 	}
 
 
-	void updatePieceMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
+	void updatePiecePotentialMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
 		std::vector<std::pair<unsigned, unsigned>> result;
 		switch (type)
 		{
@@ -265,7 +266,7 @@ private:
 			updatePawnMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (CREFboard[attacked.first][attacked.second] && white != CREFboard[attacked.first][attacked.second]->white)
-					availableMoves.insert(attacked);
+					potentialMoves.insert(attacked);
 
 			//en passant???
 			//Promotion???
@@ -274,31 +275,31 @@ private:
 			updateKnightMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					availableMoves.insert(attacked);
+					potentialMoves.insert(attacked);
 			break;
 		case Bishop:
 			updateBishopMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					availableMoves.insert(attacked);
+					potentialMoves.insert(attacked);
 			break;
 		case Rook:
 			updateRookMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					availableMoves.insert(attacked);
+					potentialMoves.insert(attacked);
 			break;
 		case Queen:
 			updateQueenMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					availableMoves.insert(attacked);
+					potentialMoves.insert(attacked);
 			break;
 		case King:
 			updateKingMoves(CREFboard, position);
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					availableMoves.insert(attacked);
+					potentialMoves.insert(attacked);
 
 
 			//Castling???
@@ -339,10 +340,16 @@ public:
 	const std::set<std::pair<unsigned, unsigned>>& getAttackedSquares() const {
 		return attackedSquares;
 	}
-	 std::set<std::pair<unsigned, unsigned>>& getPieceMoves() {
-		return availableMoves;
+	 std::set<std::pair<unsigned, unsigned>>& getPotentialMoves() {
+		return potentialMoves;
 	}
+	 std::set<std::pair<unsigned, unsigned>>& getIllegalMoves() {
+		 return illegalMoves;
+	 }
 
+	 std::set<std::pair<unsigned, unsigned>>& getLegalMoves() {
+		 return legalMoves;
+	 }
 
 
 

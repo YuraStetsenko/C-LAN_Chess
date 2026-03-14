@@ -80,14 +80,12 @@ private:
 		}
 		else if (move.ptTo == EnPassant)
 		{
-			short i_killed = i_to + ((short)i_to - (short)i_from);
-
-			if (playBoard[i_killed][j_to]) //This shouldn't ever be true... But still, WHAT IF??
-				delete playBoard[i_killed][j_to];
+			if (playBoard[i_from][j_to]) //This shouldn't ever be true... But still, WHAT IF??
+				delete playBoard[i_from][j_to];
 
 			//revive the killed pawn
-			playBoard[i_killed][j_to] = new ChessPiece(Pawn, !wasLastWhite);
-			pieces.insert(playBoard[i_killed][j_to]); 
+			playBoard[i_from][j_to] = new ChessPiece(Pawn, !wasLastWhite);
+			pieces.insert(playBoard[i_from][j_to]);
 		}
 		else if (move.ptTo == Promotion)
 		{
@@ -119,7 +117,7 @@ private:
 			return false;
 
 		//is the move among avialable ones for the piece?
-		const auto& availableMoves = playBoard[i_from][j_from]->getPieceMoves();
+		const auto& availableMoves = playBoard[i_from][j_from]->getPotentialMoves();
 		if (std::find(availableMoves.begin(), availableMoves.end(), move.toPos) == availableMoves.end())
 			return false;
 
@@ -154,11 +152,9 @@ private:
 
 		else if (move.ptTo == EnPassant)
 		{
-			short i_killed = i_to + ((short)i_to - (short)i_from);
-
-			delete playBoard[i_killed][j_to];
-			pieces.erase(playBoard[i_killed][j_to]); //(kill the attacked pawn)
-			playBoard[i_killed][j_to] = NULL;
+			delete playBoard[i_from][j_to];
+			pieces.erase(playBoard[i_from][j_to]); //(kill the attacked pawn)
+			playBoard[i_from][j_to] = NULL;
 		};
 
 	}
@@ -181,12 +177,12 @@ private:
 
 		//apply the move to see whether a the king of the moving color is under attack now, making the move invalid
 		applyAssumedMove(move);	
-		updatePieceMoves();
+		updatePotentialMoves();
 
 		if (attackedByEnemyCells.find(king) != attackedByEnemyCells.end())
 		{
 			revertMove(move, isWhitesTurn); //revert the board to the initial state
-			updatePieceMoves();
+			updatePotentialMoves();
 
 			if (move.ptFrom == King)
 				king = { i_from, j_from };
@@ -196,7 +192,7 @@ private:
 		
 		//revert the board to the initial state
 		revertMove(move, isWhitesTurn); 
-		updatePieceMoves();
+		updatePotentialMoves();
 
 		if (move.ptFrom == King)
 			king = { i_from, j_from }; //save king pos if necessary
@@ -216,22 +212,20 @@ private:
 			j_to - 1 <= 7 && 
 			playBoard[i_to][j_to - 1] && 
 			playBoard[i_to][j_to - 1]->getType() == Pawn && 
-			playBoard[i_to][j_to - 1]->white == isWhitesTurn &&
-			isMoveValid({ {i_to, j_to - 1}, { i_to + ((((int)i_from) - ((int)i_to)) / 2), j_from }, Pawn, EnPassant })
+			playBoard[i_to][j_to - 1]->white != playBoard[i_to][j_to]->white //&&
+			//isMoveValid({ {i_to, j_to - 1}, { i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from }, Pawn, EnPassant })
 			)
-				playBoard[i_to][j_to - 1]->getPieceMoves().insert({ i_to + ((((int)i_from) - ((int)i_to)) / 2), j_from });
+				playBoard[i_to][j_to - 1]->getPotentialMoves().insert({ i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from });
 
 		if (
 			j_to + 1 <= 7 && 
 			playBoard[i_to][j_to + 1] && 
 			playBoard[i_to][j_to + 1]->getType() == Pawn && 
-			playBoard[i_to][j_to + 1]->white == isWhitesTurn &&
-			isMoveValid({ {i_to, j_to + 1}, { i_to + ((((int)i_from) - ((int)i_to)) / 2), j_from }, Pawn, EnPassant })
+			playBoard[i_to][j_to + 1]->white != playBoard[i_to][j_to]->white //&&
+			//isMoveValid({ {i_to, j_to + 1}, { i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from }, Pawn, EnPassant })
 			)
-				playBoard[i_to][j_to + 1]->getPieceMoves().insert({ i_to + ((((int)i_from) - ((int)i_to)) / 2), j_from });
+				playBoard[i_to][j_to + 1]->getPotentialMoves().insert({ i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from });
 			
-
-		toCheckForEnPassant = false;
 	}
 
 	void updateCastlingFlags(const Move& madeMove) {
@@ -283,7 +277,7 @@ private:
 				attackedByWhiteCells.find({ 0,1 }) == attackedByWhiteCells.end() && 
 				attackedByWhiteCells.find({ 0,2 }) == attackedByWhiteCells.end()
 				)
-					playBoard[black_king.first][black_king.second]->getPieceMoves().insert({ 0,1 });
+					playBoard[black_king.first][black_king.second]->getPotentialMoves().insert({ 0,1 });
 
 			if (
 				canBlackCastleQueenSide && 
@@ -293,7 +287,7 @@ private:
 				attackedByWhiteCells.find({ 0,4 }) == attackedByWhiteCells.end() &&
 				attackedByWhiteCells.find({ 0,5 }) == attackedByWhiteCells.end() &&
 				attackedByWhiteCells.find({ 0,6 }) == attackedByWhiteCells.end())
-					playBoard[black_king.first][black_king.second]->getPieceMoves().insert({ 0,5 });
+					playBoard[black_king.first][black_king.second]->getPotentialMoves().insert({ 0,5 });
 		}
 
 		if (!whiteUnderCheck)
@@ -305,7 +299,7 @@ private:
 				attackedByBlackCells.find({ 7,1 }) == attackedByBlackCells.end() && 
 				attackedByBlackCells.find({ 7,2 }) == attackedByBlackCells.end()
 				)
-					playBoard[white_king.first][white_king.second]->getPieceMoves().insert({ 7,1 });
+					playBoard[white_king.first][white_king.second]->getPotentialMoves().insert({ 7,1 });
 
 			if (
 				canWhiteCastleQueenSide && 
@@ -316,12 +310,12 @@ private:
 				attackedByBlackCells.find({ 7,5 }) == attackedByBlackCells.end() && 
 				attackedByBlackCells.find({ 7,6 }) == attackedByBlackCells.end()
 				)
-					playBoard[white_king.first][white_king.second]->getPieceMoves().insert({ 7,5 });
+					playBoard[white_king.first][white_king.second]->getPotentialMoves().insert({ 7,5 });
 		}
 
 	}
 
-	void updatePieceMoves(){
+	void updatePotentialMoves(){
 		attackedByBlackCells.clear();
 		attackedByWhiteCells.clear();
 
@@ -329,14 +323,14 @@ private:
 			for (int j = 0; j < size; j++)
 				if (playBoard[i][j])
 				{
-					playBoard[i][j]->updatePieceMoves(playBoard, { i,j });
+					playBoard[i][j]->updatePiecePotentialMoves(playBoard, { i,j });
 
 					for (auto attackedCell : playBoard[i][j]->getAttackedSquares())
 						(playBoard[i][j]->white ? attackedByWhiteCells : attackedByBlackCells).insert(attackedCell);
 				}
 	}
 
-	void updateLegalMoves() 
+	void updateIllegalMoves()
 	{
 		illegalWhiteMoves.clear();
 		illegalBlackMoves.clear(); // purely black magic...
@@ -347,7 +341,7 @@ private:
 				if (playBoard[i][j]) //we iterate trough "playBoard" instead of "pieces" because it's easier to get indexes i and j this way
 				{
 					//find illegal moves
-					auto illegalMoves = playBoard[i][j]->getPieceMoves();
+					auto& illegalMoves = playBoard[i][j]->getIllegalMoves();
 					auto currentPieceType = playBoard[i][j]->getType();
 
 					for (auto it = illegalMoves.begin(); it != illegalMoves.end(); ) {
@@ -357,16 +351,23 @@ private:
 							it++;
 					}
 
-					playBoard[i][j]->setIllegalMoves(illegalMoves);
-
 					auto& unallowedMoves = playBoard[i][j]->white ? illegalWhiteMoves : illegalBlackMoves;
 					for (auto& moveTo : illegalMoves)
 						unallowedMoves.push_back({ {i, j}, moveTo });
 				}
 
-
 	}
 	
+	void updateLegalMoves() 
+	{
+		for (int i = 0, size = playBoard.size(); i < size; i++)
+			for (int j = 0; j < size; j++)
+				if (playBoard[i][j])
+				{
+
+				}
+	}
+
 	void updateChecks()
 	{
 		auto& isKingUnderCheck = (isWhitesTurn ? whiteUnderCheck : blackUnderCheck);
@@ -475,8 +476,8 @@ public:
 	}
 
 	void updateAvailableMoves() {
-		updatePieceMoves();
-		updateLegalMoves();
+		updatePotentialMoves();
+		updateIllegalMoves();
 		updateChecks();
 		updateCastlingMoves();
 		updateEnPassant();
@@ -490,12 +491,8 @@ public:
 		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
 
 		if (move.ptFrom == Pawn)
-		{
-			if (std::abs(((int)i_from) - ((int)i_to)) == 2)
-			{
-				toCheckForEnPassant = true; //A pawn took a double-step? En Passant alert!
-			}
-			else if (std::abs(((int)j_from) - ((int)j_to)) == 1)
+		{	
+			if (std::abs(((int)j_from) - ((int)j_to)) == 1)
 			{	
 				move.ptTo = EnPassant;		//A pawn suddenly changed it's column? En Passant detected!
 			}
@@ -507,7 +504,7 @@ public:
 		//if it's a legal castling, mark it so.
 		if (move.ptFrom == King && std::abs( ((int)j_from) - ((int)j_to) ) == 2 )
 		{
-			const auto& kingsMoves = playBoard[i_from][j_from]->getPieceMoves();
+			const auto& kingsMoves = playBoard[i_from][j_from]->getPotentialMoves();
 			if (kingsMoves.find(move.toPos) == kingsMoves.end())
 				return false;
 
@@ -519,10 +516,15 @@ public:
 			return false;
 		
 		applyAssumedMove(move);
-
 		isWhitesTurn = !isWhitesTurn;
-		moves.push(move);
 		
+		//A pawn took a double-step? En Passant alert for the future
+		if (move.ptFrom == Pawn && std::abs(((int)i_from) - ((int)i_to)) == 2)
+			toCheckForEnPassant = true;
+		else
+			toCheckForEnPassant = false;
+
+		moves.push(move);
 		updateCastlingFlags(move);
 		updateAvailableMoves();
 		
@@ -610,7 +612,7 @@ public:
 			float gap = (squareSize - 2 * circle.getRadius()) / 2.f;
 			circle.setOrigin(-gap, -gap);
 
-			for (const auto& moveSquare : playBoard[i][j]->getPieceMoves()) {
+			for (const auto& moveSquare : playBoard[i][j]->getPotentialMoves()) {
 				
 				const unsigned& move_i = moveSquare.first, & move_j = moveSquare.second;
 				sf::Vector2f position = boardPosition + sf::Vector2f({ (is_player_white ? (7 - move_j) : move_j) * squareSize,   (!is_player_white ? (7 - move_i) : move_i) * squareSize });
