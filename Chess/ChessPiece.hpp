@@ -258,58 +258,40 @@ private:
 	}
 
 
-	void updatePiecePotentialMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
-		std::vector<std::pair<unsigned, unsigned>> result;
+	void updatePiecePotentialMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) 
+	{
+
 		switch (type)
 		{
 		case Pawn:
 			updatePawnMoves(CREFboard, position);
-			for (const auto& attacked : attackedSquares)
-				if (CREFboard[attacked.first][attacked.second] && white != CREFboard[attacked.first][attacked.second]->white)
-					potentialMoves.insert(attacked);
-
-			//en passant???
-			//Promotion???
 			break;
 		case Knight:
 			updateKnightMoves(CREFboard, position);
-			for (const auto& attacked : attackedSquares)
-				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					potentialMoves.insert(attacked);
 			break;
 		case Bishop:
 			updateBishopMoves(CREFboard, position);
-			for (const auto& attacked : attackedSquares)
-				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					potentialMoves.insert(attacked);
 			break;
 		case Rook:
 			updateRookMoves(CREFboard, position);
-			for (const auto& attacked : attackedSquares)
-				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					potentialMoves.insert(attacked);
 			break;
 		case Queen:
 			updateQueenMoves(CREFboard, position);
-			for (const auto& attacked : attackedSquares)
-				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					potentialMoves.insert(attacked);
 			break;
 		case King:
 			updateKingMoves(CREFboard, position);
-			for (const auto& attacked : attackedSquares)
-				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
-					potentialMoves.insert(attacked);
-
-
-			//Castling???
 			break;
 		}
 
+		if (type == Pawn) // A pawn can't move to the square attacked by itself, unless it's to take an enemy's piece
+			for (const auto& attacked : attackedSquares) 
+				if (CREFboard[attacked.first][attacked.second] && white != CREFboard[attacked.first][attacked.second]->white)
+					potentialMoves.insert(attacked);
 
-
-		//further validtaion: is check or stalemate now (and after each move if is check), is
-
+		else //every other piece can move to any of the squares attacked by themselves, unless there's an ally piece
+			for (const auto& attacked : attackedSquares)
+				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)
+					potentialMoves.insert(attacked);
 
 	}
 
