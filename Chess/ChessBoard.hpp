@@ -53,24 +53,37 @@ private:
 	
 
 	//ONLY use to get a PREVIOUS position. !!!Not supposed to be used instead of makeMove()!!! Update 
-	void revertMove(const Move& move, bool wasLastWhite, bool no_checks = false) {
+	void revertMove(const Move& move, bool wasLastWhite, bool no_checks = true) {
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second, & i_to = move.toPos.first, & j_to = move.toPos.second;
-		if(no_checks)
+		if(!no_checks)
 			if (
-				playBoard[i_from][j_from] || !playBoard[i_to][j_to] || move.ptFrom == EmptyCell ||
+				playBoard[i_from][j_from] || 
+				!playBoard[i_to][j_to] || 
+				move.ptFrom == EmptyCell ||
 				playBoard[i_to][j_to]->getType() != move.ptFrom
-				)
-				return;
-			
-		playBoard[i_from][j_from] = playBoard[i_to][j_to]; //return the piece back to the starting cell
-		playBoard[i_to][j_to] = NULL;
+			   )
+					return;
 		
-		if (move.ptTo != EmptyCell)
+		if (move.ptFrom == Promotion)
 		{
-			playBoard[i_to][j_to] = new ChessPiece(move.ptTo, !wasLastWhite);
+			playBoard[i_from][j_from] = new ChessPiece(Pawn, !wasLastWhite);
+			
+			delete playBoard[i_to][j_to];
+			pieces.erase(playBoard[i_to][j_to]);
+
+			playBoard[i_to][j_to] = new ChessPiece(move.ptTo, wasLastWhite);
 			pieces.insert(playBoard[i_to][j_to]);
+
+			return;
 		}
-		else if (move.ptTo == Castling)
+		else
+		{
+			playBoard[i_from][j_from] = playBoard[i_to][j_to]; //return the piece back to the starting cell
+			playBoard[i_to][j_to] = NULL;
+		}
+	
+
+		if (move.ptTo == Castling)
 		{
 			revertMove
 			(
@@ -87,9 +100,10 @@ private:
 			playBoard[i_from][j_to] = new ChessPiece(Pawn, !wasLastWhite);
 			pieces.insert(playBoard[i_from][j_to]);
 		}
-		else if (move.ptTo == Promotion)
+		else if (move.ptTo != EmptyCell)
 		{
-			//TODO:: logic for Promotion
+			playBoard[i_to][j_to] = new ChessPiece(move.ptTo, !wasLastWhite);
+			pieces.insert(playBoard[i_to][j_to]);
 		}
 		
 	}
@@ -209,38 +223,26 @@ private:
 		const unsigned& i_to = moves.top().toPos.first, & j_to = moves.top().toPos.second;
 		std::pair<unsigned, unsigned> enPassant_toPos = { i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from };
 
-		if (
-			j_to - 1 <= 7 &&
-			playBoard[i_to][j_to - 1] &&
-			playBoard[i_to][j_to - 1]->getType() == Pawn &&
-			playBoard[i_to][j_to - 1]->white != playBoard[i_to][j_to]->white
+
+		for(short offset = -1; offset <= 1; offset += 2)
+			if (
+				j_to - 1 <= 7 &&
+				playBoard[i_to][j_to + offset] &&
+				playBoard[i_to][j_to + offset]->getType() == Pawn &&
+				playBoard[i_to][j_to + offset]->white != playBoard[i_to][j_to]->white
+			   )
+			{
+				auto& pawnPotentialMoves = playBoard[i_to][j_to + offset]->getPotentialMoves();
+
+
+				pawnPotentialMoves.insert(enPassant_toPos);
 			
-			)
-		{
-			auto& pawnPotentialMoves = playBoard[i_to][j_to - 1]->getPotentialMoves();
+				if (!isMoveValid({ {i_to, j_to + offset}, enPassant_toPos, Pawn, EnPassant }))
+					pawnPotentialMoves.erase(enPassant_toPos);
+				else
+					pawnPotentialMoves.insert(enPassant_toPos);
+			}
 
-
-			pawnPotentialMoves.insert(enPassant_toPos);
-			
-			if (!isMoveValid({ {i_to, j_to - 1}, enPassant_toPos, Pawn, EnPassant }))
-				pawnPotentialMoves.erase(enPassant_toPos);
-		}
-
-		if (
-			j_to + 1 <= 7 &&
-			playBoard[i_to][j_to + 1] &&
-			playBoard[i_to][j_to + 1]->getType() == Pawn &&
-			playBoard[i_to][j_to + 1]->white != playBoard[i_to][j_to]->white 
-			)
-		{
-			auto& pawnPotentialMoves = playBoard[i_to][j_to + 1]->getPotentialMoves();
-
-
-			pawnPotentialMoves.insert(enPassant_toPos);
-
-			if (!isMoveValid({ {i_to, j_to + 1}, enPassant_toPos, Pawn, EnPassant }))
-				pawnPotentialMoves.erase(enPassant_toPos);
-		}
 	}
 
 	void updateCastlingFlags(const Move& madeMove) {
@@ -594,6 +596,10 @@ public:
 							sprite.setTexture(rook.second);
 						else
 							sprite.setTexture(rook.first);
+						break;
+					default:
+						sprite.setTexture(king.second);
+						sprite.setColor(sf::Color::Red);
 						break;
 					}
 

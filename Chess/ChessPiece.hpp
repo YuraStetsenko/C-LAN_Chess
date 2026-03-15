@@ -284,10 +284,11 @@ private:
 		}
 
 		if (type == Pawn) // A pawn can't move to the square attacked by itself, unless it's to take an enemy's piece
-			for (const auto& attacked : attackedSquares) 
+		{
+			for (const auto& attacked : attackedSquares)
 				if (CREFboard[attacked.first][attacked.second] && white != CREFboard[attacked.first][attacked.second]->white)
 					potentialMoves.insert(attacked);
-
+		}
 		else //every other piece can move to any of the squares attacked by themselves, unless there's an ally piece
 			for (const auto& attacked : attackedSquares)
 				if (!CREFboard[attacked.first][attacked.second] || white != CREFboard[attacked.first][attacked.second]->white)

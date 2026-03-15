@@ -7,3 +7,6 @@ Temporarily leaving illegalMoves to be, because although I don't like it, it wor
 Added legalMoves, and I'm going to replace the role of illegalMoves with it, because it would be more of a straightworward approach. 
 TODO:: complete writing updateLegalMoves(), implement it, and replace the illegal moves approach bs
 //FIXED:://Also, isMoveVaild() seems to work incorrectly when an EnPassant move is passed there. Let me check.
+TODO:: look for for-if-if, else nests where I didn't use curly brackets. Might be some errors there lol...
+
+King's displayed legal moves aren't vaild, but the invalid moves don't go through luckily
