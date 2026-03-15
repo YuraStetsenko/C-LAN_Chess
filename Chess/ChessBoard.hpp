@@ -117,8 +117,8 @@ private:
 			return false;
 
 		//is the move among avialable ones for the piece?
-		const auto& availableMoves = playBoard[i_from][j_from]->getPotentialMoves();
-		if (std::find(availableMoves.begin(), availableMoves.end(), move.toPos) == availableMoves.end())
+		const auto& potentialMoves = playBoard[i_from][j_from]->getPotentialMoves();
+		if (std::find(potentialMoves.begin(), potentialMoves.end(), move.toPos) == potentialMoves.end())
 			return false;
 
 
@@ -166,7 +166,7 @@ private:
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
 		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
 
-
+		//Validate the positions so the server logic can't be tricked even if the move is transmitted as "Castling"
 		if (!areMovePositionsValid(move))
 			return false;
 
@@ -207,25 +207,40 @@ private:
 
 		const unsigned& i_from = moves.top().fromPos.first, & j_from = moves.top().fromPos.second;
 		const unsigned& i_to = moves.top().toPos.first, & j_to = moves.top().toPos.second;
+		std::pair<unsigned, unsigned> enPassant_toPos = { i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from };
 
 		if (
-			j_to - 1 <= 7 && 
-			playBoard[i_to][j_to - 1] && 
-			playBoard[i_to][j_to - 1]->getType() == Pawn && 
-			playBoard[i_to][j_to - 1]->white != playBoard[i_to][j_to]->white //&&
-			//isMoveValid({ {i_to, j_to - 1}, { i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from }, Pawn, EnPassant })
-			)
-				playBoard[i_to][j_to - 1]->getPotentialMoves().insert({ i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from });
-
-		if (
-			j_to + 1 <= 7 && 
-			playBoard[i_to][j_to + 1] && 
-			playBoard[i_to][j_to + 1]->getType() == Pawn && 
-			playBoard[i_to][j_to + 1]->white != playBoard[i_to][j_to]->white //&&
-			//isMoveValid({ {i_to, j_to + 1}, { i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from }, Pawn, EnPassant })
-			)
-				playBoard[i_to][j_to + 1]->getPotentialMoves().insert({ i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from });
+			j_to - 1 <= 7 &&
+			playBoard[i_to][j_to - 1] &&
+			playBoard[i_to][j_to - 1]->getType() == Pawn &&
+			playBoard[i_to][j_to - 1]->white != playBoard[i_to][j_to]->white
 			
+			)
+		{
+			auto& pawnPotentialMoves = playBoard[i_to][j_to - 1]->getPotentialMoves();
+
+
+			pawnPotentialMoves.insert(enPassant_toPos);
+			
+			if (!isMoveValid({ {i_to, j_to - 1}, enPassant_toPos, Pawn, EnPassant }))
+				pawnPotentialMoves.erase(enPassant_toPos);
+		}
+
+		if (
+			j_to + 1 <= 7 &&
+			playBoard[i_to][j_to + 1] &&
+			playBoard[i_to][j_to + 1]->getType() == Pawn &&
+			playBoard[i_to][j_to + 1]->white != playBoard[i_to][j_to]->white 
+			)
+		{
+			auto& pawnPotentialMoves = playBoard[i_to][j_to + 1]->getPotentialMoves();
+
+
+			pawnPotentialMoves.insert(enPassant_toPos);
+
+			if (!isMoveValid({ {i_to, j_to + 1}, enPassant_toPos, Pawn, EnPassant }))
+				pawnPotentialMoves.erase(enPassant_toPos);
+		}
 	}
 
 	void updateCastlingFlags(const Move& madeMove) {

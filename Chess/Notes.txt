@@ -2,4 +2,8 @@
 updatePieceMoves() updates all the pieces' sets of both availableMoves and attackedSquares.
 To look for the checks we actually only need to update the attacked squares, so let's make a separate function to use in the isMoveValid(), so it doesn't mess up availableMoves sets.
 
-I need a function for ChessPiece that only checks whether a piece puts a check on the enemy.
+After all decided to just rename availableMoves into potentialMoves for clarity. 
+Temporarily leaving illegalMoves to be, because although I don't like it, it works with it.
+Added legalMoves, and I'm going to replace the role of illegalMoves with it, because it would be more of a straightworward approach. 
+TODO:: complete writing updateLegalMoves(), implement it, and replace the illegal moves approach bs
+//FIXED:://Also, isMoveVaild() seems to work incorrectly when an EnPassant move is passed there. Let me check.
