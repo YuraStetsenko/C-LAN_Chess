@@ -9,4 +9,4 @@ TODO:: complete writing updateLegalMoves(), implement it, and replace the illega
 //FIXED:://Also, isMoveVaild() seems to work incorrectly when an EnPassant move is passed there. Let me check.
 TODO:: look for for-if-if, else nests where I didn't use curly brackets. Might be some errors there lol...
 
-King's displayed legal moves aren't vaild, but the invalid moves don't go through luckily
+Gonna fix selected piece moves displaying, then gonna split finding potentialMoves and attackedSquares into separate functions

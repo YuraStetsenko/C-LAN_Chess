@@ -26,7 +26,7 @@ public:
 
 	enum Signal {
 		NoSignal = 0,
-		ToSendMove = 1,
+		ToTryMove = 1,
 		ToPassToUI = 2
 	};
 
@@ -116,21 +116,22 @@ public:
 				return ToPassToUI;		//if there is a piece AND it's the same color as selected (the move's color), SELECT it INSTEAD, and pass to UI
 			}
 
-			return ToSendMove; //A move needs to be Sent
+			return ToTryMove; //A move needs to be Sent
 
 		}
 
 		return ToPassToUI; // No piece selected, clicked not on the board. Pass to UI.
 	}
 	
-	bool sendLastMove()
+	bool tryMove()
 	{
 		try
 		{
 			Move move = { fromCell, toCell, getPieceType(*pBoard, fromCell), getPieceType(*pBoard, toCell) };
-			if (((playMode == 2 || playMode == 3) ? pRoom->sendMove(move) : pBoard->makeMove(move)))
+			if (((playMode == LocalNetwork || playMode == OfficialServer) ? pRoom->sendMove(move) : pBoard->makeMove(move)))
 			{
 				hasSelectedPiece = false;
+
 				return true;
 			}
 		}
@@ -144,7 +145,8 @@ public:
 	}
 
 	//display the chessboard state on UI
-	void updateUI(){
+	void updateUI()
+	{
 		for (auto& line : squares)
 			for (auto& square : line)
 				window.draw(square);

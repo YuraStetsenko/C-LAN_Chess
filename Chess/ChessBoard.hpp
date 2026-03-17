@@ -26,8 +26,6 @@ private:
 	std::vector<std::vector<ChessPiece*>> playBoard;
 	std::set<ChessPiece*> pieces;//it's to keep track of the memory and easier moves calculation
 	std::stack<Move> moves;
-	std::vector<Move> illegalBlackMoves; //TODO:: костиль єбаний, треба якось переписати
-	std::vector<Move> illegalWhiteMoves; //TODO:: такий же костиль, переписати
 	std::set<std::pair<unsigned, unsigned>> attackedByBlackCells;
 	std::set<std::pair<unsigned, unsigned>> attackedByWhiteCells;
 
@@ -49,6 +47,7 @@ private:
 	bool canBlackCastleQueenSide = true;
 	bool canBlackCastleKingSide = true;
 	bool toCheckForEnPassant = false;
+	bool areThereLegalMovesLeft = true;
 
 	
 
@@ -59,8 +58,8 @@ private:
 			if (
 				playBoard[i_from][j_from] || 
 				!playBoard[i_to][j_to] || 
-				move.ptFrom == EmptyCell ||
-				playBoard[i_to][j_to]->getType() != move.ptFrom
+				move.ptFrom != EmptyCell ||
+				(playBoard[i_to][j_to]->getType() != move.ptFrom && move.ptFrom != Promotion )
 			   )
 					return;
 		
@@ -79,12 +78,13 @@ private:
 		else
 		{
 			playBoard[i_from][j_from] = playBoard[i_to][j_to]; //return the piece back to the starting cell
-			playBoard[i_to][j_to] = NULL;
+			playBoard[i_to][j_to] = NULL; //free the square to replace with the piece that was there before or an empty cell if none were.
 		}
 	
 
 		if (move.ptTo == Castling)
 		{
+			//Revert the rook back
 			revertMove
 			(
 				(j_to == 1) ? Move({ {i_to, 0}, {i_to, 2}, Rook, EmptyCell }) : Move({ {i_to, 7}, {i_to, 4}, Rook, EmptyCell }),
@@ -113,11 +113,6 @@ private:
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
 		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
 
-
-		//are "from" and "cells" different?
-		if (move.fromPos == move.toPos)
-			return false;
-
 		//are the positions within allowed bounds? + (*)
 		if (i_from >= playBoard.size() ||
 			j_from >= playBoard[i_from].size() ||
@@ -131,15 +126,36 @@ private:
 			return false;
 
 		//is the move among avialable ones for the piece?
-		const auto& potentialMoves = playBoard[i_from][j_from]->getPotentialMoves();
-		if (std::find(potentialMoves.begin(), potentialMoves.end(), move.toPos) == potentialMoves.end())
+		const auto& legalMoves = playBoard[i_from][j_from]->getLegalMoves();
+		if (std::find(legalMoves.begin(), legalMoves.end(), move.toPos) == legalMoves.end())
 			return false;
-
 
 		return true;
 	}
 
-	//applies a move WITHOUT ANY validations
+	//Marks the move with an appropriate type if it's Castling/En Passant/Promotion
+	void handleExceptionTypes(Move& move) 
+	{
+		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
+		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
+
+		//A pawn suddenly changed it's column? En Passant detected!
+		if (move.ptFrom == Pawn)
+		{
+			if (std::abs(((int)j_from) - ((int)j_to)) == 1)
+				move.ptTo = EnPassant;
+
+			//piece type is changed on "from" position, because we know it's a pawn, but the "to" will be a newly created one
+			else if (i_to == 7 || i_to == 0)
+				move.ptFrom = Promotion;
+		}
+		
+		//if it's a castling, mark it as so.
+		else if (move.ptFrom == King && std::abs(((int)j_from) - ((int)j_to)) == 2)
+			move.ptTo = Castling;
+	}
+
+	//Applies a move WITHOUT ANY validations
 	void applyAssumedMove(const Move& move) {
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
 		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
@@ -171,108 +187,101 @@ private:
 			playBoard[i_from][j_to] = NULL;
 		};
 
+		
 	}
 
-	bool isMoveValid(const Move& move) 
+	//ONLY to be used in updateValidMoves() after calling updatePotentialMoves()
+	bool init_validateMove(Move& move) 
 	{
 		auto& king = (isWhitesTurn ? white_king : black_king);
 		const auto& attackedByEnemyCells = (isWhitesTurn ? attackedByBlackCells : attackedByWhiteCells);
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
-		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
 
-		//Validate the positions so the server logic can't be tricked even if the move is transmitted as "Castling"
-		if (!areMovePositionsValid(move))
-			return false;
+		// En Passant/Castling/Promotion type marking
+		handleExceptionTypes(move);
 
 		//Castling validation is handled while adding its available moves
 		if (move.ptTo == Castling)
 			return true;
 
-
-		//apply the move to see whether a the king of the moving color is under attack now, making the move invalid
+		//apply the move to see whether the king of the moving color is under attack now, thus making the move invalid
 		applyAssumedMove(move);	
-		updatePotentialMoves();
-
+		updateAttackedSquares();
+		bool result = true;
 		if (attackedByEnemyCells.find(king) != attackedByEnemyCells.end())
-		{
-			revertMove(move, isWhitesTurn); //revert the board to the initial state
-			updatePotentialMoves();
-
-			if (move.ptFrom == King)
-				king = { i_from, j_from };
-					
-			return false; //the ally king is under attack, the move is NOT valid
-		}
+			result = false;
 		
 		//revert the board to the initial state
 		revertMove(move, isWhitesTurn); 
-		updatePotentialMoves();
-
-		if (move.ptFrom == King)
-			king = { i_from, j_from }; //save king pos if necessary
-
+		updateAttackedSquares();
 		
-		return  true; //the move is valid, hurray!
+		return result;
+	}
+	
+	//ONLY use after updateBoardState()
+	bool validateMove(Move& move)
+	{
+		//Validate the positions so the server logic can't be tricked even if the move is transmitted as something inappropriate
+		if (!areMovePositionsValid(move))
+			return false;
+
+		return init_validateMove(move);
 	}
 
+	//In case if the latest move was a pawn making a double-step, adds En Passant to potentialMoves of the enemy pawns left and right from it if such exist
 	void updateEnPassant() {
-		if (!toCheckForEnPassant)
+		const Move& move = moves.top();
+		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
+		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
+
+		//A pawn took a double-step? En Passant alert!
+		if ( !(move.ptFrom == Pawn && std::abs(((int)i_from) - ((int)i_to)) == 2) )
 			return;
 
-		const unsigned& i_from = moves.top().fromPos.first, & j_from = moves.top().fromPos.second;
-		const unsigned& i_to = moves.top().toPos.first, & j_to = moves.top().toPos.second;
 		std::pair<unsigned, unsigned> enPassant_toPos = { i_to - ((((int)i_to) - ((int)i_from)) / 2), j_from };
-
-
 		for(short offset = -1; offset <= 1; offset += 2)
 			if (
 				j_to - 1 <= 7 &&
 				playBoard[i_to][j_to + offset] &&
 				playBoard[i_to][j_to + offset]->getType() == Pawn &&
 				playBoard[i_to][j_to + offset]->white != playBoard[i_to][j_to]->white
-			   )
+				)
 			{
-				auto& pawnPotentialMoves = playBoard[i_to][j_to + offset]->getPotentialMoves();
-
-
-				pawnPotentialMoves.insert(enPassant_toPos);
-			
-				if (!isMoveValid({ {i_to, j_to + offset}, enPassant_toPos, Pawn, EnPassant }))
-					pawnPotentialMoves.erase(enPassant_toPos);
-				else
-					pawnPotentialMoves.insert(enPassant_toPos);
+				playBoard[i_to][j_to + offset]->getPotentialMoves().insert(enPassant_toPos);
 			}
-
 	}
 
-	void updateCastlingFlags(const Move& madeMove) {
+	void updateCastlingFlags() {
 		if (!(canBlackCastleQueenSide || canBlackCastleKingSide || canWhiteCastleKingSide || canWhiteCastleQueenSide))
 			return;
 
+		const Move& move = moves.top();
 
-		if (madeMove.ptFrom == King) {
-			if(madeMove.toPos == white_king)
+		if (move.ptFrom == King) 
+		{
+			if(move.toPos == white_king)
 				canWhiteCastleKingSide = canWhiteCastleQueenSide = false;
-			else if (madeMove.toPos == black_king)
+			else if (move.toPos == black_king)
 				canBlackCastleKingSide = canBlackCastleQueenSide = false;
 
 			return;
 		}
 
-		if (madeMove.ptFrom == Rook) {
-			if (madeMove.fromPos == std::pair<unsigned, unsigned>({ 0,7 })) {
+		if (move.ptFrom == Rook) 
+		{
+			if (canBlackCastleQueenSide && move.fromPos == std::pair<unsigned, unsigned>({ 0,7 })) {
 				canBlackCastleQueenSide = false;
 				return;
 			}
-			if (madeMove.fromPos == std::pair<unsigned, unsigned>({ 0,0 })) {
+			if (canBlackCastleKingSide && move.fromPos == std::pair<unsigned, unsigned>({ 0,0 })) {
 				canBlackCastleKingSide = false;
 				return;
 			}
-			if (madeMove.fromPos == std::pair<unsigned, unsigned>({ 7,7 })) {
+			if (canWhiteCastleQueenSide && move.fromPos == std::pair<unsigned, unsigned>({ 7,7 })) {
 				canWhiteCastleQueenSide = false;
 				return;
 			}
-			if (madeMove.fromPos == std::pair<unsigned, unsigned>({ 7,0 })) {
+			if (canWhiteCastleKingSide && move.fromPos == std::pair<unsigned, unsigned>({ 7,0 })) {
 				canWhiteCastleKingSide = false;
 				return;
 			}
@@ -332,7 +341,8 @@ private:
 
 	}
 
-	void updatePotentialMoves(){
+	void updateAttackedSquares()
+	{
 		attackedByBlackCells.clear();
 		attackedByWhiteCells.clear();
 
@@ -340,48 +350,48 @@ private:
 			for (int j = 0; j < size; j++)
 				if (playBoard[i][j])
 				{
-					playBoard[i][j]->updatePiecePotentialMoves(playBoard, { i,j });
+					playBoard[i][j]->updatePieceAttackedSquares(playBoard, { i,j });
 
 					for (auto attackedCell : playBoard[i][j]->getAttackedSquares())
 						(playBoard[i][j]->white ? attackedByWhiteCells : attackedByBlackCells).insert(attackedCell);
 				}
 	}
 
-	void updateIllegalMoves()
+	//ONLY use after updateAttackedSquares()
+	void updatePotentialMoves() 
 	{
-		illegalWhiteMoves.clear();
-		illegalBlackMoves.clear(); // purely black magic...
+		for (int i = 0, size = playBoard.size(); i < size; i++)
+			for (int j = 0; j < size; j++)
+				if (playBoard[i][j])
+					playBoard[i][j]->updatePiecePotentialMoves(playBoard, { i,j });
+	}
 
-	
+	void updateLegalMoves()
+	{
+		areThereLegalMovesLeft = false;
+		 
 		for (int i = 0, size = playBoard.size(); i < size; i++)
 			for (int j = 0; j < size; j++)
 				if (playBoard[i][j]) //we iterate trough "playBoard" instead of "pieces" because it's easier to get indexes i and j this way
 				{
 					//find illegal moves
 					auto& illegalMoves = playBoard[i][j]->getIllegalMoves();
+					auto& legalMoves = playBoard[i][j]->getLegalMoves();
 					auto currentPieceType = playBoard[i][j]->getType();
 
-					for (auto it = illegalMoves.begin(); it != illegalMoves.end(); ) {
-						if (isMoveValid({ {i,j}, *it, currentPieceType, getPieceType(*this,*it) }))
+					for (auto it = illegalMoves.begin(); it != illegalMoves.end(); ) 
+					{
+						Move move = { {i,j}, *it, currentPieceType, getPieceType(*this,*it) };
+						if (init_validateMove(move)) 
+						{
+							areThereLegalMovesLeft = true;
+
+							legalMoves.insert(*it);
 							it = illegalMoves.erase(it);
+						}
 						else
 							it++;
 					}
-
-					auto& unallowedMoves = playBoard[i][j]->white ? illegalWhiteMoves : illegalBlackMoves;
-					for (auto& moveTo : illegalMoves)
-						unallowedMoves.push_back({ {i, j}, moveTo });
-				}
-
-	}
-	
-	void updateLegalMoves() 
-	{
-		for (int i = 0, size = playBoard.size(); i < size; i++)
-			for (int j = 0; j < size; j++)
-				if (playBoard[i][j])
-				{
-
 				}
 	}
 
@@ -391,7 +401,6 @@ private:
 		auto& king = (isWhitesTurn ? white_king : black_king);
 		const auto& attackedByEnemyCells = (isWhitesTurn ? attackedByBlackCells : attackedByWhiteCells);
 		
-
 		isKingUnderCheck = false;
 
 		if (attackedByEnemyCells.find(king) != attackedByEnemyCells.end())
@@ -453,7 +462,7 @@ public:
 		black_king = { 0,3 };
 		white_king = { 7,3 };
 
-		updateAvailableMoves();
+		updateBoardState();
 
 
 		//UI
@@ -479,7 +488,7 @@ public:
 				delete piece;
 	}
 
-	//fancy board
+	//custom board
 	//ChessBoard(const std::vector<std::vector<PieceType>>& BeginningBoard, const std::vector<Move> Moves):pieces(Pieces.size(),NULL) {
 	//	for (unsigned amount = Pieces.size(), i = 0; i < amount; i++) {
 	//		//pieces[i] = new;
@@ -492,12 +501,16 @@ public:
 		return playBoard[position.first][position.second];
 	}
 
-	void updateAvailableMoves() {
+	//Use only after applying a valid move and pushing it to "moves"
+	void updateBoardState() 
+	{
+		updateCastlingFlags();
+		updateAttackedSquares();
 		updatePotentialMoves();
-		updateIllegalMoves();
+		updateEnPassant();
+		updateLegalMoves();
 		updateChecks();
 		updateCastlingMoves();
-		updateEnPassant();
 		//TODO::check for (stale)mates
 	}
 
@@ -507,45 +520,14 @@ public:
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
 		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
 
-		if (move.ptFrom == Pawn)
-		{	
-			if (std::abs(((int)j_from) - ((int)j_to)) == 1)
-			{	
-				move.ptTo = EnPassant;		//A pawn suddenly changed it's column? En Passant detected!
-			}
-			else if (i_to == 7 || i_to == 0) {
-				move.ptTo = Promotion;		//Do I have to explain?
-			}
-		}
-
-		//if it's a legal castling, mark it so.
-		if (move.ptFrom == King && std::abs( ((int)j_from) - ((int)j_to) ) == 2 )
-		{
-			const auto& kingsMoves = playBoard[i_from][j_from]->getPotentialMoves();
-			if (kingsMoves.find(move.toPos) == kingsMoves.end())
-				return false;
-
-			move.ptTo = Castling;
-		}
-
-
-		if (!isMoveValid(move))
+		if (!validateMove(move))
 			return false;
 		
 		applyAssumedMove(move);
 		isWhitesTurn = !isWhitesTurn;
-		
-		//A pawn took a double-step? En Passant alert for the future
-		if (move.ptFrom == Pawn && std::abs(((int)i_from) - ((int)i_to)) == 2)
-			toCheckForEnPassant = true;
-		else
-			toCheckForEnPassant = false;
-
 		moves.push(move);
-		updateCastlingFlags(move);
-		updateAvailableMoves();
+		updateBoardState();
 		
-
 		return true;
 	}
 	
@@ -633,22 +615,14 @@ public:
 			float gap = (squareSize - 2 * circle.getRadius()) / 2.f;
 			circle.setOrigin(-gap, -gap);
 
-			for (const auto& moveSquare : playBoard[i][j]->getPotentialMoves()) {
-				
+			for (const auto& moveSquare : playBoard[i][j]->getLegalMoves()) 
+			{
 				const unsigned& move_i = moveSquare.first, & move_j = moveSquare.second;
 				sf::Vector2f position = boardPosition + sf::Vector2f({ (is_player_white ? (7 - move_j) : move_j) * squareSize,   (!is_player_white ? (7 - move_i) : move_i) * squareSize });
 
 				circle.setPosition(position);
 				circle.setFillColor(sf::Color(180, 0, 0, 100));
-				for (auto& illegalMove : (isWhitesTurn ? illegalWhiteMoves : illegalBlackMoves)) 
-					if (illegalMove.fromPos == fromPos && illegalMove.toPos == moveSquare)
-					{
-						circle.setFillColor({ 0, 0, 0, 0 });
-						break;
-					}
-				
 				target.draw(circle);
-
 			}
 		}
 	}

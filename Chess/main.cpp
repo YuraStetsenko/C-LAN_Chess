@@ -22,12 +22,17 @@ int main() {
 			if (event.type == sf::Event::MouseButtonPressed)
 				switch (game.handleClick(event)) 
 				{
-				case ChessApp::Signal::ToSendMove:
-					if (game.sendLastMove() && playMode == ChessApp::GameMode::SingleScreen)
+				case ChessApp::Signal::ToTryMove:
+
+					//Applies move if it's valid
+					if (game.tryMove() && playMode == ChessApp::GameMode::SingleScreen)
 						game.toggleCurrentPlayersColor();
+
 					break;
 				case ChessApp::Signal::ToPassToUI:
+
 					//Some bs with UI idk
+
 					break;
 				}
 		}
