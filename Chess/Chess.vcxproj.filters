@@ -51,10 +51,10 @@
     <None Include="chessima.bin">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\.gitignore" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="IP.txt" />
     <Text Include="TODO list.txt" />
-    <Text Include="Notes.txt" />
   </ItemGroup>
 </Project>
