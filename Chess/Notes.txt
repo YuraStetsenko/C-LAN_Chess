@@ -10,3 +10,10 @@ TODO:: complete writing updateLegalMoves(), implement it, and replace the illega
 TODO:: look for for-if-if, else nests where I didn't use curly brackets. Might be some errors there lol...
 
 Gonna fix selected piece moves displaying, then gonna split finding potentialMoves and attackedSquares into separate functions
+
+OKAY. SOMETHING IS NOT RIGHT WITH THE SPLIT APPROACH.
+Another mystery lol.
+
+IDEA:: rework attacked cells as a 2d matrix mapping which cells are attacked by who with 2 bool flags for each cell
+
+to do lots of debugging and to consider changing sets to something more reliable, as they cause some shit

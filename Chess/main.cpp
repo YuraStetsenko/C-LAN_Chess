@@ -20,7 +20,8 @@ int main() {
 			}
 
 			if (event.type == sf::Event::MouseButtonPressed)
-				switch (game.handleClick(event)) 
+			{
+				switch (game.handleClick(event))
 				{
 				case ChessApp::Signal::ToTryMove:
 
@@ -35,6 +36,13 @@ int main() {
 
 					break;
 				}
+			}
+			else if (event.type == sf::Event::KeyPressed)
+			{
+				if(event.key.code == sf::Keyboard::Down)
+					if (game.requestCancelMove() && playMode == ChessApp::GameMode::SingleScreen)
+						game.toggleCurrentPlayersColor();
+			}
 		}
 		
 		window.clear(sf::Color::Black);

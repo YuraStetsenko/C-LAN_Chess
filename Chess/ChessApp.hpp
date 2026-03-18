@@ -144,6 +144,27 @@ public:
 		return false;
 	}
 
+	bool requestCancelMove() 
+	{
+		try
+		{
+			Move move = { fromCell, toCell, getPieceType(*pBoard, fromCell), getPieceType(*pBoard, toCell) };
+			if (((playMode == LocalNetwork || playMode == OfficialServer) ? pRoom->requestCancelLastMove() : pBoard->cancelLastMove()))
+			{
+				hasSelectedPiece = false;
+
+				return true;
+			}
+		}
+		catch (std::exception)
+		{
+			std::cerr << "\n\nDuring requestCancelMove() an Error Occured!\n\n";
+			//_exit(404);
+		}
+
+		return false;
+	}
+
 	//display the chessboard state on UI
 	void updateUI()
 	{

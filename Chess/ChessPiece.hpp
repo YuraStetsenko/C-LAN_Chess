@@ -23,10 +23,7 @@ private:
 		if (!CREFboard.size() || CREFboard.size() <= i || CREFboard[i].size() <= j || CREFboard[i][j] != this) 
 			return;
 
-		short offset = white ? -1 : 1, //move direction
-			  edge = white ? (CREFboard.size() - 1) : 0; //corrseponding edge of the table
-
-
+		unsigned offset = white ? -1 : 1;
 		//add attacks
 		if(j != 0)
 			attackedSquares.insert({ i + offset, j - 1 });
@@ -244,10 +241,12 @@ private:
 	}
 	
 	//ONLY to be used after calling updatePieceAttackedSquares()
-	void updatePiecePotentialMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
+	void updatePiecePotentialMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) 
+	{
 		potentialMoves.clear();
 		unsigned i = position.first, j = position.second;
-		if (!CREFboard.size() || CREFboard.size() <= i || CREFboard[i].size() <= j || CREFboard[i][j] != this) // is cell on board and is it this exact piece
+
+		if (!CREFboard.size() || CREFboard.size() <= i || CREFboard[i].size() <= j || CREFboard[i][j] != this) // is cell on board and is there this exact piece
 			return;
 
 		if (type == Pawn) 
@@ -266,7 +265,7 @@ private:
 					potentialMoves.insert({ i + 2 * offset, j });
 			}
 
-			//add the diagonal attacks if necessary
+			//add diagonal attacks if necessary
 			for (const auto& attacked : attackedSquares)
 				if (CREFboard[attacked.first][attacked.second] && white != CREFboard[attacked.first][attacked.second]->white)
 					potentialMoves.insert(attacked);
@@ -299,7 +298,9 @@ public:
 		return type;
 	}
 
-	
+	void setIllegalMoves(const std::set<std::pair<unsigned, unsigned>>& set) {
+		illegalMoves = set;
+	}
 
 	const std::set<std::pair<unsigned, unsigned>>& getAttackedSquares() const {
 		return attackedSquares;

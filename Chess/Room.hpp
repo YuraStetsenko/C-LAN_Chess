@@ -310,7 +310,10 @@ public:
 		return true;
 	}
 
-
+	bool requestCancelLastMove() {
+		//some logic later
+		return false;
+	}
 		
 	
 };
