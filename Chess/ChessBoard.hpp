@@ -18,27 +18,8 @@ void loadTextureFromResource(int resourceID, sf::Texture& texture) {
 	}
 }
 
-
-class ChessBoard {
-private:
-
-	std::vector<std::vector<PieceType>> beginningBoard;
-	std::vector<std::vector<ChessPiece*>> playBoard;
-	std::set<ChessPiece*> pieces;//it's to keep track of the memory and easier moves calculation
-	std::stack<Move> moves;
-	std::set<std::pair<unsigned, unsigned>> attackedByBlackCells;
-	std::set<std::pair<unsigned, unsigned>> attackedByWhiteCells;
-
-	std::pair<sf::Texture, sf::Texture> pawn;
-	std::pair<sf::Texture, sf::Texture> king;
-	std::pair<sf::Texture, sf::Texture> queen;
-	std::pair<sf::Texture, sf::Texture> bishop;
-	std::pair<sf::Texture, sf::Texture> knight;
-	std::pair<sf::Texture, sf::Texture> rook;
-
-	std::pair<unsigned,unsigned> white_king;
-	std::pair<unsigned, unsigned> black_king;
-
+struct ChessBoardFlags
+{
 	bool isWhitesTurn = true;
 	bool whiteUnderCheck = false;
 	bool blackUnderCheck = false;
@@ -48,69 +29,86 @@ private:
 	bool canBlackCastleKingSide = true;
 	bool toCheckForEnPassant = false;
 	bool areThereLegalMovesLeft = true;
+	PieceType ptPromotionTo = Queen;
+};
 
-	
+class ChessBoard {
+private:
 
-	//ONLY use to get a PREVIOUS position. !!!Not supposed to be used instead of makeMove()!!! Update 
-	void revertMove(const Move& move, bool wasLastWhite, bool no_checks = true) {
+	std::vector<std::vector<PieceType>> demonstrationBoard; //to be used to switch between previous moves
+	std::vector<std::vector<ChessPiece*>> playBoard;
+	std::set<ChessPiece*> pieces;
+	std::stack<std::pair<Move, ChessBoardFlags>> moves;
+	std::stack<std::pair<Move, ChessBoardFlags>> cancelledMoves;
+	std::set<std::pair<unsigned, unsigned>> attackedByBlackCells;
+	std::set<std::pair<unsigned, unsigned>> attackedByWhiteCells;
+
+	std::pair<sf::Texture, sf::Texture> pawn;
+	std::pair<sf::Texture, sf::Texture> king; //TODO:: maybe separate textures into a separate struct
+	std::pair<sf::Texture, sf::Texture> queen;
+	std::pair<sf::Texture, sf::Texture> bishop;
+	std::pair<sf::Texture, sf::Texture> knight;
+	std::pair<sf::Texture, sf::Texture> rook;
+
+	std::pair<unsigned,unsigned> white_king;
+	std::pair<unsigned, unsigned> black_king;
+
+	ChessBoardFlags flags;
+
+	//to be used in revertMove(...is_init==true) and applyAssumedMove(...is_init==true) for init_validateMove() 
+	ChessPiece* init_lastlyTakenPiece = NULL;
+
+
+	//ONLY use to get a PREVIOUS position. Not supposed to be used instead of makeMove()
+	void revertMove(const Move& move, bool is_init) 
+	{
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second, & i_to = move.toPos.first, & j_to = move.toPos.second;
-		if(!no_checks)
-			if (
-				playBoard[i_from][j_from] || 
-				!playBoard[i_to][j_to] || 
-				move.ptFrom != EmptyCell ||
-				(playBoard[i_to][j_to]->getType() != move.ptFrom && move.ptFrom != Promotion )
-			   )
-					return;
-		
-		if (move.ptFrom == Promotion)
+
+
+		//return the piece back to the starting cell
+		playBoard[i_from][j_from] = playBoard[i_to][j_to]; 
+		playBoard[i_to][j_to] = NULL;
+
+		if (move.ptFrom == King) 
 		{
-			playBoard[i_from][j_from] = new ChessPiece(Pawn, !wasLastWhite);
-			
-			delete playBoard[i_to][j_to];
-			pieces.erase(playBoard[i_to][j_to]);
-
-			playBoard[i_to][j_to] = new ChessPiece(move.ptTo, wasLastWhite);
-			pieces.insert(playBoard[i_to][j_to]);
-
-			return;
+			//track the king
+			(playBoard[i_from][j_from]->white ? white_king : black_king) = { i_from , j_from };
 		}
-		else
+		else if (move.ptFrom == Promotion) 
 		{
-			playBoard[i_from][j_from] = playBoard[i_to][j_to]; //return the piece back to the starting cell
-			playBoard[i_to][j_to] = NULL; //free the square to replace with the piece that was there before or an empty cell if none were.
-
-			if (move.ptFrom == King)
-				(playBoard[i_from][j_from]->white ? white_king : black_king) = { i_from , j_from};
+			//transform the piece back to a pawn if it was a promotion
+			playBoard[i_from][j_from]->setType(Pawn);
 		}
-	
 
 		if (move.ptTo == Castling)
 		{
-			//Revert the rook back
+			//Revert the rook back and set toPos as NULL
 			revertMove
 			(
 				(j_to == 1) ? Move({ {i_to, 0}, {i_to, 2}, Rook, EmptyCell }) : Move({ {i_to, 7}, {i_to, 4}, Rook, EmptyCell }),
-				wasLastWhite
+				false
 			);
 		}
 		else if (move.ptTo == EnPassant)
 		{
-			if (playBoard[i_from][j_to]) //This shouldn't ever be true... But still, WHAT IF??
+			//This shouldn't ever be true... But still, WHAT IF??
+			if (playBoard[i_from][j_to]) 
 				delete playBoard[i_from][j_to];
 
 			//revive the killed pawn
-			playBoard[i_from][j_to] = new ChessPiece(Pawn, !wasLastWhite);
+			playBoard[i_from][j_to] = is_init ? init_lastlyTakenPiece : (new ChessPiece(Pawn, flags.isWhitesTurn));
 			pieces.insert(playBoard[i_from][j_to]);
 		}
 		else if (move.ptTo != EmptyCell)
 		{
-			playBoard[i_to][j_to] = new ChessPiece(move.ptTo, !wasLastWhite);
-			pieces.insert(playBoard[i_to][j_to]);
+			//revive the killed piece
+			playBoard[i_to][j_to] = is_init ? init_lastlyTakenPiece : (new ChessPiece(move.ptTo, flags.isWhitesTurn));
+			pieces.insert(playBoard[i_to][j_to]);  //the "pieces" won't make a duplicate if it already contains init_lastlyTakenPiece, as it's a set
 		}
-		
-	}
+		else
+			playBoard[i_to][j_to] = NULL; 
 
+	}
 
 	//Marks the move with an appropriate type if it's Castling/En Passant/Promotion
 	void handleExceptionTypes(Move& move) 
@@ -136,15 +134,21 @@ private:
 	}
 
 	//Applies a move WITHOUT ANY validations
-	void applyAssumedMove(const Move& move) 
+	void applyAssumedMove(const Move& move, bool is_init) 
 	{
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
 		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
-		auto& king = (isWhitesTurn ? white_king : black_king);
+		auto& king = (flags.isWhitesTurn ? white_king : black_king);
 
-		//(kill the piece that standed there if there was one)
-		if (playBoard[i_to][j_to]) 
+		
+		if (is_init) 
 		{
+			//save the pointer to the piece that standed on toPos if was one or "NULL" otherwise
+			init_lastlyTakenPiece = playBoard[i_to][j_to];
+		}
+		else if (playBoard[i_to][j_to]) 
+		{
+			//delete the piece that standed on toPos if there was one
 			delete playBoard[i_to][j_to];
 			pieces.erase(playBoard[i_to][j_to]); 
 		}
@@ -155,29 +159,53 @@ private:
 
 		if (move.ptFrom == King)
 		{
-			king = { i_to, j_to }; //in case we moved a king, save his new position
+			//track the king
+			king = { i_to, j_to }; 
 
+			//move the rook for castling
 			if (move.ptTo == Castling)
-				revertMove((j_to == 1 ? Move({ {i_to, 2} ,{i_to, 0}, Rook, EmptyCell }) : Move({ {i_to, 4}, {i_to, 7}, Rook, EmptyCell })), true /*it doesn't matter which color's is move for castling made with revertMove*/);
+				revertMove
+				(
+					(j_to == 1 ? Move({ {i_to, 2} ,{i_to, 0}, Rook, EmptyCell }) : Move({ {i_to, 4}, {i_to, 7}, Rook, EmptyCell })),
+					false //doesn't matter whether is_init==true for castling, because we didn't kill anybody :)
+				);
 		}
+		else if (move.ptFrom == Promotion) 
+		{
+			//Transform the piece into the chosen type
+			playBoard[i_to][j_to]->setType(flags.ptPromotionTo);
+		}
+			
 
 		else if (move.ptTo == EnPassant)
 		{
-			delete playBoard[i_from][j_to];
-			pieces.erase(playBoard[i_from][j_to]); //(kill the attacked pawn)
+			
+			if (is_init)
+			{
+				//save the attacked pawn
+				init_lastlyTakenPiece = playBoard[i_from][j_to];
+			}
+			else 
+			{
+				//kill the attacked pawn
+				delete playBoard[i_from][j_to];
+				pieces.erase(playBoard[i_from][j_to]);
+			}
+
 			playBoard[i_from][j_to] = NULL;
 		}
+		
 	}
 
 	//ONLY to be used in updateLegalMoves() after calling updatePotentialMoves()
 	bool init_validateMove(Move& move) 
 	{
-		auto& king = (isWhitesTurn ? white_king : black_king);
-		const auto& attackedByEnemyCells = (isWhitesTurn ? attackedByBlackCells : attackedByWhiteCells);
+		auto& king = (flags.isWhitesTurn ? white_king : black_king);
+		const auto& attackedByEnemyCells = (flags.isWhitesTurn ? attackedByBlackCells : attackedByWhiteCells);
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
 
 		//is the selected piece of the moving color?
-		if (isWhitesTurn != playBoard[i_from][j_from]->white)
+		if (flags.isWhitesTurn != playBoard[i_from][j_from]->white)
 			return false;
 
 		// En Passant/Castling/Promotion type marking
@@ -188,14 +216,14 @@ private:
 			return true;
 
 		//apply the move to see whether the king of the moving color is under attack now, thus making the move invalid
-		applyAssumedMove(move);	
+		applyAssumedMove(move, true);	
 		updateAttackedSquares();
 		bool result = true;
 		if (attackedByEnemyCells.find(king) != attackedByEnemyCells.end())
 			result = false;
 		
 		//revert the board to the initial state
-		revertMove(move, isWhitesTurn); 
+		revertMove(move, true);
 		
 		return result;
 	}
@@ -216,7 +244,7 @@ private:
 			return false;
 
 		//is the selected piece of the moving color?
-		if (isWhitesTurn != playBoard[i_from][j_from]->white)
+		if (flags.isWhitesTurn != playBoard[i_from][j_from]->white)
 			return false;
 
 		//is the move among avialable ones for the piece?
@@ -235,7 +263,7 @@ private:
 		if (moves.empty())
 			return;
 
-		const Move& move = moves.top();
+		const Move& move = moves.top().first;
 		const unsigned& i_from = move.fromPos.first, & j_from = move.fromPos.second;
 		const unsigned& i_to = move.toPos.first, & j_to = move.toPos.second;
 
@@ -259,37 +287,37 @@ private:
 	}
 
 	void updateCastlingFlags() {
-		if (moves.empty() || !(canBlackCastleQueenSide || canBlackCastleKingSide || canWhiteCastleKingSide || canWhiteCastleQueenSide))
+		if (moves.empty() || !(flags.canBlackCastleQueenSide || flags.canBlackCastleKingSide || flags.canWhiteCastleKingSide || flags.canWhiteCastleQueenSide))
 			return;
 
-		const Move& move = moves.top();
+		const Move& move = moves.top().first;
 
 		if (move.ptFrom == King) 
 		{
 			if(move.toPos == white_king)
-				canWhiteCastleKingSide = canWhiteCastleQueenSide = false;
+				flags.canWhiteCastleKingSide = flags.canWhiteCastleQueenSide = false;
 			else if (move.toPos == black_king)
-				canBlackCastleKingSide = canBlackCastleQueenSide = false;
+				flags.canBlackCastleKingSide = flags.canBlackCastleQueenSide = false;
 
 			return;
 		}
 
 		if (move.ptFrom == Rook) 
 		{
-			if (canBlackCastleQueenSide && move.fromPos == std::pair<unsigned, unsigned>({ 0,7 })) {
-				canBlackCastleQueenSide = false;
+			if (flags.canBlackCastleQueenSide && move.fromPos == std::pair<unsigned, unsigned>({ 0,7 })) {
+				flags.canBlackCastleQueenSide = false;
 				return;
 			}
-			if (canBlackCastleKingSide && move.fromPos == std::pair<unsigned, unsigned>({ 0,0 })) {
-				canBlackCastleKingSide = false;
+			if (flags.canBlackCastleKingSide && move.fromPos == std::pair<unsigned, unsigned>({ 0,0 })) {
+				flags.canBlackCastleKingSide = false;
 				return;
 			}
-			if (canWhiteCastleQueenSide && move.fromPos == std::pair<unsigned, unsigned>({ 7,7 })) {
-				canWhiteCastleQueenSide = false;
+			if (flags.canWhiteCastleQueenSide && move.fromPos == std::pair<unsigned, unsigned>({ 7,7 })) {
+				flags.canWhiteCastleQueenSide = false;
 				return;
 			}
-			if (canWhiteCastleKingSide && move.fromPos == std::pair<unsigned, unsigned>({ 7,0 })) {
-				canWhiteCastleKingSide = false;
+			if (flags.canWhiteCastleKingSide && move.fromPos == std::pair<unsigned, unsigned>({ 7,0 })) {
+				flags.canWhiteCastleKingSide = false;
 				return;
 			}
 		}
@@ -297,15 +325,15 @@ private:
 
 	//ONLY use after updateChecks()
 	void updateCastlingMoves() {
-		if (!(canBlackCastleQueenSide || canBlackCastleKingSide || canWhiteCastleKingSide || canWhiteCastleQueenSide))
+		if (!(flags.canBlackCastleQueenSide || flags.canBlackCastleKingSide || flags.canWhiteCastleKingSide || flags.canWhiteCastleQueenSide))
 			return;
 
 
 		//TODO:: possibly shorten this function
-		if (!blackUnderCheck) 
+		if (!flags.blackUnderCheck)
 		{
 			if (
-				canBlackCastleKingSide && 
+				flags.canBlackCastleKingSide &&
 				!playBoard[0][1] && 
 				!playBoard[0][2] && 
 				attackedByWhiteCells.find({ 0,1 }) == attackedByWhiteCells.end() && 
@@ -314,7 +342,7 @@ private:
 					playBoard[black_king.first][black_king.second]->getPotentialMoves().insert({ 0,1 });
 
 			if (
-				canBlackCastleQueenSide && 
+				flags.canBlackCastleQueenSide &&
 				!playBoard[0][4] && 
 				!playBoard[0][5] && 
 				!playBoard[0][6] && 
@@ -324,10 +352,10 @@ private:
 					playBoard[black_king.first][black_king.second]->getPotentialMoves().insert({ 0,5 });
 		}
 
-		if (!whiteUnderCheck)
+		if (!flags.whiteUnderCheck)
 		{
 			if (
-				canWhiteCastleKingSide && 
+				flags.canWhiteCastleKingSide &&
 				!playBoard[7][1] && 
 				!playBoard[7][2] && 
 				attackedByBlackCells.find({ 7,1 }) == attackedByBlackCells.end() && 
@@ -336,7 +364,7 @@ private:
 					playBoard[white_king.first][white_king.second]->getPotentialMoves().insert({ 7,1 });
 
 			if (
-				canWhiteCastleQueenSide && 
+				flags.canWhiteCastleQueenSide &&
 				!playBoard[7][4] && 
 				!playBoard[7][5] && 
 				!playBoard[7][6] && 
@@ -378,7 +406,7 @@ private:
 	//ALWAYS call updateAttackedSquares() After this function once again
 	void updateLegalMoves()
 	{
-		areThereLegalMovesLeft = false;
+		flags.areThereLegalMovesLeft = false;
 		 
 		for (int i = 0, size = playBoard.size(); i < size; i++)
 			for (int j = 0; j < size; j++)
@@ -397,7 +425,7 @@ private:
 						Move move = { {i,j}, *it, currentPieceType, getPieceType(*this, *it) };
 						if (init_validateMove(move)) 
 						{
-							areThereLegalMovesLeft = true;
+							flags.areThereLegalMovesLeft = true;
 							legalMoves.insert(*it);
 						}
 						else
@@ -408,9 +436,9 @@ private:
 
 	void updateChecks()
 	{
-		auto& isKingUnderCheck = (isWhitesTurn ? whiteUnderCheck : blackUnderCheck);
-		auto& king = (isWhitesTurn ? white_king : black_king);
-		const auto& attackedByEnemyCells = (isWhitesTurn ? attackedByBlackCells : attackedByWhiteCells);
+		auto& isKingUnderCheck = (flags.isWhitesTurn ? flags.whiteUnderCheck : flags.blackUnderCheck);
+		auto& king = (flags.isWhitesTurn ? white_king : black_king);
+		const auto& attackedByEnemyCells = (flags.isWhitesTurn ? attackedByBlackCells : attackedByWhiteCells);
 		
 		isKingUnderCheck = false;
 
@@ -425,7 +453,6 @@ private:
 	//Use only after applying a valid move and pushing it to "moves"
 	void updateBoardState()
 	{
-		updateCastlingFlags();
 		updateAttackedSquares();
 		updatePotentialMoves();
 		updateEnPassant();
@@ -439,7 +466,7 @@ private:
 public:
 	friend class ChessPiece;
 	//basic board
-	ChessBoard() :beginningBoard(8, std::vector<PieceType>(8, EmptyCell)), playBoard(8, std::vector<ChessPiece*>(8, NULL)) {
+	ChessBoard() :demonstrationBoard(8, std::vector<PieceType>(8, EmptyCell)), playBoard(8, std::vector<ChessPiece*>(8, NULL)) {
 		//initialize standard chess game
 		int pieceCounter = 0;
 
@@ -487,6 +514,7 @@ public:
 
 		white_king = { 7,3 };
 
+		//updateCastlingFlags();
 		updateBoardState();
 
 
@@ -520,7 +548,7 @@ public:
 	//	}
 	//}
 
-	bool isWhitesMove() const { return isWhitesTurn; }
+	bool isWhitesMove() const { return flags.isWhitesTurn; }
 
 	ChessPiece*& getCellPtr(std::pair<unsigned, unsigned> position) {
 		return playBoard[position.first][position.second];
@@ -534,26 +562,57 @@ public:
 
 		if (!validateMove(move))
 			return false;
+
+		//clear the cancelled moves
+		cancelledMoves = std::stack<std::pair<Move, ChessBoardFlags>>(); 
+
+		//save the flags before the move was applied
+		moves.push({ move, flags });
+
+		//apply the move
+		applyAssumedMove(move, false);
 		
-		applyAssumedMove(move);
-		isWhitesTurn = !isWhitesTurn;
-		moves.push(move);
+		//update the logic
+		flags.isWhitesTurn = !flags.isWhitesTurn;
+		updateCastlingFlags();
 		updateBoardState();
 		
 		return true;
 	}
 
-	bool cancelLastMove() {
-		if (moves.empty())
+	//true = undo last move
+	//false = redo last undone move
+	bool cancelLastMove(const bool& undo) 
+	{
+		auto& usedStack = undo ? moves : cancelledMoves;
+		auto& otherStack = undo ? cancelledMoves : moves;
+		
+
+		if (usedStack.empty())
 			return false;
 
-		revertMove(moves.top(), isWhitesTurn);
-		isWhitesTurn = !isWhitesTurn;
-		moves.pop();
+		if (undo)
+		{
+			revertMove(moves.top().first, false);
+			flags = moves.top().second;
+		}
+		else 
+		{
+			applyAssumedMove(cancelledMoves.top().first, false);
+
+			flags = cancelledMoves.top().second;
+			flags.isWhitesTurn = !flags.isWhitesTurn;
+			updateCastlingFlags();
+		}
+
+		otherStack.push(usedStack.top());
+		usedStack.pop();
+
 		updateBoardState();
 
 		return true;
 	}
+
 	
 	void updateUI(bool is_player_white, const sf::Vector2f& boardPosition, const float& squareSize, sf::RenderTarget& target) {
 		float pictureSize = 60.f;
