@@ -3,6 +3,19 @@
 #include "Move.hpp"
 #include "ChessBoard.hpp"
 
+enum PieceType {
+	EnPassant = -3,
+	Promotion = -2,
+	Castling = -1,
+	EmptyCell = 0,
+	Pawn = 1,
+	Knight = 2,
+	Bishop = 3,
+	Rook = 4,
+	Queen = 5,
+	King = 6
+};
+
 class ChessPiece {
 private:
 	PieceType type;
@@ -15,7 +28,6 @@ private:
 
 	void updatePawnAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position)
 	{
-		attackedSquares.clear();
 		const unsigned& i = position.first, &j = position.second;
 
 
@@ -30,9 +42,8 @@ private:
 		if(j != 7)
 			attackedSquares.insert({ i + offset, j + 1 });
 	}
-	void updateKnightAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
-		attackedSquares.clear();
-		
+	void updateKnightAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) 
+	{	
 		unsigned i = position.first, j = position.second;
 
 		if (!CREFboard.size() || CREFboard.size() <= i || CREFboard[i].size() <= j || CREFboard[i][j] != this) // is cell on board and is it this exact piece
@@ -54,8 +65,6 @@ private:
 	}
 	void updateBishopAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) 
 	{
-		attackedSquares.clear();
-		
 		unsigned a, b;
 		const auto& i_pos = position.first;
 		const auto& j_pos = position.second;
@@ -82,9 +91,8 @@ private:
 			}
 		}	
 	}
-	void updateRookAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
-		attackedSquares.clear();
-		
+	void updateRookAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) 
+	{
 		unsigned a, i = a = position.first, j = position.second;
 
 		if (!CREFboard.size() || CREFboard.size() <= i || CREFboard[i].size() <= j || CREFboard[i][j] != this) // is cell on board and is it this exact piece
@@ -123,9 +131,8 @@ private:
 		}
 
 	}
-	void updateQueenAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
-		attackedSquares.clear();
-		
+	void updateQueenAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) 
+	{
 		unsigned a, i = a = position.first, b, j = b = position.second;
 
 		if (!CREFboard.size() || CREFboard.size() <= i || CREFboard[i].size() <= j || CREFboard[i][j] != this) // is cell on board and is it this exact piece
@@ -198,9 +205,8 @@ private:
 		}
 
 	}
-	void updateKingAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) {
-		attackedSquares.clear();
-		
+	void updateKingAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) 
+	{
 		unsigned i = position.first, j = position.second;
 
 		if (!CREFboard.size() || CREFboard.size() <= i || CREFboard[i].size() <= j || CREFboard[i][j] != this) // is cell on board and is it this exact piece
@@ -215,6 +221,8 @@ private:
 
 	void updatePieceAttackedSquares(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position)
 	{
+		attackedSquares.clear();
+
 		switch (type)
 		{
 		case Pawn:
@@ -244,6 +252,7 @@ private:
 	void updatePiecePotentialMoves(const std::vector<std::vector<ChessPiece*>>& CREFboard, std::pair<unsigned, unsigned> position) 
 	{
 		potentialMoves.clear();
+
 		unsigned i = position.first, j = position.second;
 
 		if (!CREFboard.size() || CREFboard.size() <= i || CREFboard[i].size() <= j || CREFboard[i][j] != this) // is cell on board and is there this exact piece
@@ -289,6 +298,14 @@ public:
 	ChessPiece() = delete;
 	ChessPiece(PieceType Type, bool isWhite) : white(isWhite), type(Type) {
 
+	}
+
+	void setType(const PieceType& _type) 
+	{
+		if (_type < 1 || _type > 6)
+			return;
+
+		type = _type;
 	}
 	
 	PieceType getType() {

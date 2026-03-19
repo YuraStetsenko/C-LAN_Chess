@@ -23,14 +23,14 @@ int main() {
 			{
 				switch (game.handleClick(event))
 				{
-				case ChessApp::Signal::ToTryMove:
+				case ChessApp::ToTryMove:
 
 					//Applies move if it's valid
 					if (game.tryMove() && playMode == ChessApp::GameMode::SingleScreen)
 						game.toggleCurrentPlayersColor();
 
 					break;
-				case ChessApp::Signal::ToPassToUI:
+				case ChessApp::ToPassToUI:
 
 					//Some bs with UI idk
 
@@ -39,15 +39,22 @@ int main() {
 			}
 			else if (event.type == sf::Event::KeyPressed)
 			{
-				if(event.key.code == sf::Keyboard::Down)
-					if (game.requestCancelMove() && playMode == ChessApp::GameMode::SingleScreen)
+				if (event.key.code == sf::Keyboard::Down)
+				{
+					if (game.requestCancelMove(true) && playMode == ChessApp::GameMode::SingleScreen)
 						game.toggleCurrentPlayersColor();
+				}
+				else if (event.key.code == sf::Keyboard::Up) 
+				{
+					if (game.requestCancelMove(false) && playMode == ChessApp::GameMode::SingleScreen)
+						game.toggleCurrentPlayersColor();
+				}
 			}
 		}
 		
 		window.clear(sf::Color::Black);
 		
-		game.updateUI();
+		game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
 
 		window.display();
 	}

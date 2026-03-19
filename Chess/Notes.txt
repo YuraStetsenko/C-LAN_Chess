@@ -1,0 +1,10 @@
+Accidentally deleted previous notes lol. They are still left in the commit history though, so it's fine.
+
+Well let's continute making a candy out of my chess project, lol.
+
+What I'm thinking right now is I that I kinda hate ChessBoard class. Too many unorganized shit and exceptions. Wayyy too unelegant.
+
+Trying to make a correct cancelMove() so that it's easier for me to test the application.
+Also, I'm wondering, if there's a better way to test it than just playing the game? Will need to put some extra thought into this later.
+
+A thought: this can be optimized to only update attacked squares of rooks, bishops and the queen during updateLegalMoves(). I will not do it, for now.

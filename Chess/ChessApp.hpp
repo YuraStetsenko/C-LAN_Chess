@@ -144,12 +144,14 @@ public:
 		return false;
 	}
 
-	bool requestCancelMove() 
+	//true = undo last move
+	//false = redo last undone move
+	bool requestCancelMove(const bool& undo) 
 	{
 		try
 		{
 			Move move = { fromCell, toCell, getPieceType(*pBoard, fromCell), getPieceType(*pBoard, toCell) };
-			if (((playMode == LocalNetwork || playMode == OfficialServer) ? pRoom->requestCancelLastMove() : pBoard->cancelLastMove()))
+			if (((playMode == LocalNetwork || playMode == OfficialServer) ? pRoom->requestCancelLastMove() : pBoard->cancelLastMove(undo)))
 			{
 				hasSelectedPiece = false;
 
