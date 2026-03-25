@@ -1,9 +1,12 @@
 #pragma once
 #include "Room.hpp"
 
-class ChessUI {
-private:
+namespace myChess {
 
-public:
+	class ChessUI {
+	private:
 
-};
+	public:
+
+	};
+}

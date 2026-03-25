@@ -8,12 +8,13 @@
 
 General:
 
-!!!Make promotion!!!
+!!!Make UI for promotion!!!
 
 !!!Add a fucking checkmate and a stalemate!!!
 - Fucking Menu, buttons, navigation, etc.
 - Display previous moves
 - Make Premoves
+- Make Animations
 
 
 

@@ -1,6 +1,8 @@
 #pragma once
 #include "Room.hpp"
 
+namespace myChess {
+
 bool loadFontFromResource(sf::Font& font, int resourceId) {
 	HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(resourceId), RT_RCDATA);
 	if (!hRes) return false;
@@ -15,6 +17,35 @@ bool loadFontFromResource(sf::Font& font, int resourceId) {
 	return font.loadFromMemory(pData, dataSize);
 }
 
+std::map<PieceType, char> mapPieceToFEN
+{
+	{Pawn, 'P'},
+	{Knight, 'N'},
+	{Bishop, 'B'},
+	{Rook, 'R'},
+	{Queen, 'Q'},
+	{King, 'K'}
+};
+
+std::map<char, PieceType> mapLetterToPieceType
+{
+	{'P', Pawn},   {'N', Knight},
+	{'B', Bishop}, {'R', Rook},
+	{'Q', Queen},  {'K', King}
+};
+
+std::map<unsigned, const char*> mapFileIndexToLetter
+{
+	{7, "a"}, {6, "b"}, {5, "c"}, {4, "d"},
+	{3, "e"}, {2, "f"}, {1, "g"}, {0, "h"}
+};
+
+std::map<char, unsigned> mapLetterToFileIndex
+{
+	{'a', 7}, {'b', 6}, {'c', 5}, {'d', 4},
+	{'e', 3}, {'f', 2}, {'g', 1}, {'h', 0}
+};
+
 class ChessApp {
 public:
 	enum GameMode {
@@ -27,14 +58,15 @@ public:
 	enum Signal {
 		NoSignal = 0,
 		ToTryMove = 1,
-		ToPassToUI = 2
+		ToRedrawUI = 2,
+		ToProcessGUI = 3
 	};
 
 private:
 	sf::RenderWindow& window;
 	std::unique_ptr<Room> pRoom;
 	ChessBoard* pBoard;
-	
+
 	float squareSize;
 	sf::Vector2f boardPosition;
 	std::vector<std::vector<sf::RectangleShape>> squares;
@@ -49,7 +81,7 @@ private:
 public:
 
 	ChessApp() = delete;
-	ChessApp(sf::RenderWindow& Window) : window(Window) 
+	ChessApp(sf::RenderWindow& Window) : window(Window)
 	{
 		squareSize = std::min(window.getSize().x, window.getSize().y) / 12.f;
 		sf::RectangleShape initRect({ squareSize, squareSize });
@@ -93,7 +125,7 @@ public:
 
 			hasSelectedPiece = true; //if the clicked cell is valid, set the corresponding flag to true
 
-			return NoSignal;
+			return ToRedrawUI;
 		}
 
 		else if (hasSelectedPiece) //if some piece was selected BEFORE this click
@@ -101,7 +133,7 @@ public:
 
 			if (!sf::FloatRect(boardPosition, { squareSize * 8, squareSize * 8 }).contains(mousePos)) {
 				hasSelectedPiece = false;
-				return ToPassToUI;					//if clicked not on the board, unselect
+				return ToRedrawUI;					//if clicked not on the board, unselect
 			}
 
 			toCell = { (unsigned)((mousePos.y - boardPosition.y) / squareSize), (unsigned)((mousePos.x - boardPosition.x) / squareSize) }; //clicked cell
@@ -113,16 +145,17 @@ public:
 
 			if (pBoard->getCellPtr(toCell) && pBoard->getCellPtr(toCell)->white == pBoard->getCellPtr(fromCell)->white) {
 				fromCell = toCell;
-				return ToPassToUI;		//if there is a piece AND it's the same color as selected (the move's color), SELECT it INSTEAD, and pass to UI
+				return ToRedrawUI;		//if there is a piece AND it's the same color as selected (the move's color), SELECT it INSTEAD, and pass to UI
 			}
 
 			return ToTryMove; //A move needs to be Sent
 
 		}
 
-		return ToPassToUI; // No piece selected, clicked not on the board. Pass to UI.
+		//TODO:: to change ts so that the GUI is processed first
+		return ToProcessGUI; // No piece selected, clicked not on the board. Pass to UI.
 	}
-	
+
 	bool tryMove()
 	{
 		try
@@ -135,7 +168,7 @@ public:
 				return true;
 			}
 		}
-		catch (std::exception) 
+		catch (std::exception)
 		{
 			std::cerr << "\n\nDuring SendLastMove() an Error Occured!\n\n";
 			//_exit(404);
@@ -146,7 +179,8 @@ public:
 
 	//true = undo last move
 	//false = redo last undone move
-	bool requestCancelMove(const bool& undo) 
+	//TODO:: to extend this function to correctly handle bot and server
+	bool requestCancelMove(const bool& undo)
 	{
 		try
 		{
@@ -195,7 +229,7 @@ public:
 		playModeText.setCharacterSize(60);
 		isHost.setCharacterSize(40);
 		color.setCharacterSize(40);
-		playModeText.setPosition((window.getSize().x - playModeText.getGlobalBounds().getSize().x) / 2.f, window.getSize().y/8.f);
+		playModeText.setPosition((window.getSize().x - playModeText.getGlobalBounds().getSize().x) / 2.f, window.getSize().y / 8.f);
 		isHost.setPosition((window.getSize().x - isHost.getGlobalBounds().getSize().x) / 2.f, ((window.getSize().y / 2.f) - isHost.getGlobalBounds().getSize().y) / 2.f + (window.getSize().y / 8.f));
 		color.setPosition((window.getSize().x - color.getGlobalBounds().getSize().x) / 2.f, (((window.getSize().y / 2.f) - color.getGlobalBounds().getSize().y) / 2.f) + (window.getSize().y / 4.f));
 
@@ -226,7 +260,7 @@ public:
 						is_player_white = true;
 						color.setString("White");
 					}
-					else if (event.key.code == sf::Keyboard::Enter) 
+					else if (event.key.code == sf::Keyboard::Enter)
 					{
 
 						switch (playMode)
@@ -237,7 +271,7 @@ public:
 						case SingleScreen:
 							pBoard = new ChessBoard();
 							if (!is_player_white)
-								toggleCurrentPlayersColor(); 
+								toggleCurrentPlayersColor();
 							return SingleScreen;
 						case LocalNetwork:
 							pRoom.reset(new Room("", "", is_host, is_player_white));
@@ -255,7 +289,7 @@ public:
 
 			window.clear(sf::Color::Black);
 
-			switch (playMode) 
+			switch (playMode)
 			{
 			case Bot:
 				playModeText.setString("Play with a Bot");
@@ -279,12 +313,96 @@ public:
 			window.display();
 		}
 
-		
+
 	}
 
-	//idk why would you need ts
+
 	void toggleCurrentPlayersColor() {
 		is_player_white = !is_player_white;
 		//return i
 	}
+
+	std::string getCurrentFEN()
+	{
+		std::string fen;
+		fen.reserve(100);
+
+		for (int i = 0, emptySquaresCount; i < 8; ++i)
+		{
+			emptySquaresCount = 0;
+
+			for (int j = 7; j >= 0; j--)
+			{
+				auto& pPiece = pBoard->getCellPtr({ i, j });
+				
+				if (pPiece)
+				{
+					if (emptySquaresCount) 
+					{
+						fen += std::to_string(emptySquaresCount);
+						emptySquaresCount = 0;
+					}
+
+					fen += pPiece->white ? mapPieceToFEN[pPiece->getType()] : std::tolower(mapPieceToFEN[pPiece->getType()]);
+				}
+				else
+					++emptySquaresCount;
+			}
+			if (emptySquaresCount)
+				fen += std::to_string(emptySquaresCount);
+
+			fen += "/";
+		}
+		fen.pop_back();
+
+		const auto& flags = pBoard->crefFlags;
+
+		fen += flags.isWhitesTurn ? " w " : " b ";
+
+		if (!flags.canWhiteCastleKingSide && !flags.canWhiteCastleQueenSide && !flags.canBlackCastleKingSide && !flags.canBlackCastleQueenSide)
+			fen += "- ";
+		else
+		{
+			if (flags.canWhiteCastleKingSide)
+				fen += "K";
+			if (flags.canWhiteCastleQueenSide)
+				fen += "Q";
+			if (flags.canWhiteCastleKingSide)
+				fen += "k";
+			if (flags.canWhiteCastleKingSide)
+				fen += "q";
+
+			fen += " ";
+		}
+
+		if (flags.enPassantTo.first)
+			fen += mapFileIndexToLetter[flags.enPassantTo.first] + std::to_string(8 - flags.enPassantTo.second);
+		else
+			fen += "- ";
+
+		fen += std::to_string(flags.halfMoveClock);
+		fen += " ";
+		fen += std::to_string(flags.fullMoveCount);
+
+		return fen;
+	}
+
+	bool makeBotsMove(std::string sMove) 
+	{
+		if (sMove.empty())
+			return false;
+
+		std::pair<unsigned, unsigned> fromPos = { 8 - sMove[1] + '0', mapLetterToFileIndex[sMove[0]] }, toPos = { 8 - sMove[3] + '0', mapLetterToFileIndex[sMove[2]] };
+		Move move = {fromPos, toPos, getPieceType(*pBoard, fromPos), getPieceType(*pBoard, toPos) };
+
+		if (sMove[4] != '\n')
+			pBoard->setNextPromotionType(mapLetterToPieceType[ std::toupper(sMove[4]) ]);
+
+		return pBoard->makeMove(move);
+	}
+
 };
+
+
+
+}

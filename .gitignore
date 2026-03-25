@@ -8,6 +8,7 @@
 *.sln.docstates
 
 # Build folders
+stockfish/
 Debug/
 Release/
 x64/
@@ -43,5 +44,7 @@ cmake_install.cmake
 compile_commands.json
 
 # sln 
-.sln
+*.sln
+
+*.nnue
 
