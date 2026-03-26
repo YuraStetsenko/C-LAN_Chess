@@ -14,83 +14,80 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Stockfish">
-      <UniqueIdentifier>{2d070b27-5a39-4cbe-b859-7d6019ee1217}</UniqueIdentifier>
+      <UniqueIdentifier>{3723c0b9-f621-4d52-b311-d284d3778fea}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Stockfish_source\bitboard.cpp">
-      <Filter>Resource Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\nnue\features\full_threats.cpp">
+    <ClCompile Include="stockfish\benchmark.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\nnue\features\half_ka_v2_hm.cpp">
+    <ClCompile Include="stockfish\bitboard.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\nnue\network.cpp">
+    <ClCompile Include="stockfish\engine.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\nnue\nnue_accumulator.cpp">
+    <ClCompile Include="stockfish\evaluate.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\nnue\nnue_misc.cpp">
+    <ClCompile Include="stockfish\memory.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\syzygy\tbprobe.cpp">
+    <ClCompile Include="stockfish\misc.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\benchmark.cpp">
+    <ClCompile Include="stockfish\movegen.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\bitboard.cpp">
+    <ClCompile Include="stockfish\movepick.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\engine.cpp">
+    <ClCompile Include="stockfish\nnue\features\full_threats.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\evaluate.cpp">
+    <ClCompile Include="stockfish\nnue\features\half_ka_v2_hm.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\memory.cpp">
+    <ClCompile Include="stockfish\nnue\network.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\misc.cpp">
+    <ClCompile Include="stockfish\nnue\nnue_accumulator.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\movegen.cpp">
+    <ClCompile Include="stockfish\nnue\nnue_misc.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\movepick.cpp">
+    <ClCompile Include="stockfish\position.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\position.cpp">
+    <ClCompile Include="stockfish\score.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\score.cpp">
+    <ClCompile Include="stockfish\search.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\search.cpp">
+    <ClCompile Include="stockfish\syzygy\tbprobe.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\thread.cpp">
+    <ClCompile Include="stockfish\thread.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\timeman.cpp">
+    <ClCompile Include="stockfish\timeman.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\tt.cpp">
+    <ClCompile Include="stockfish\tt.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\tune.cpp">
+    <ClCompile Include="stockfish\tune.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\uci.cpp">
+    <ClCompile Include="stockfish\uci.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\stockfish\src\ucioption.cpp">
+    <ClCompile Include="stockfish\ucioption.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
   </ItemGroup>
@@ -116,131 +113,125 @@
     <ClInclude Include="ChessUI.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Stockfish_source\benchmark.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="bitboard.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\incbin\incbin.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\features\full_threats.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\features\half_ka_v2_hm.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\layers\affine_transform.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\layers\affine_transform_sparse_input.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\layers\clipped_relu.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\layers\sqr_clipped_relu.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\network.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\nnue_accumulator.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\nnue_architecture.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\nnue_common.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\nnue_feature_transformer.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\nnue_misc.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\nnue\simd.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\syzygy\tbprobe.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\benchmark.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\bitboard.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\engine.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\evaluate.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\history.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\memory.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\misc.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\movegen.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\movepick.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\numa.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\perft.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\position.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\score.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\search.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\shm.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\shm_linux.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\thread.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\thread_win32_osx.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\timeman.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\tt.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\tune.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\types.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\uci.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\stockfish\src\ucioption.h">
-      <Filter>Stockfish</Filter>
-    </ClInclude>
     <ClInclude Include="StockfishRunner.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\benchmark.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\bitboard.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\engine.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\evaluate.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\history.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\incbin\incbin.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\memory.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\misc.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\movegen.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\movepick.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\features\full_threats.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\features\half_ka_v2_hm.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\layers\affine_transform.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\layers\affine_transform_sparse_input.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\layers\clipped_relu.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\layers\sqr_clipped_relu.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\network.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\nnue_accumulator.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\nnue_architecture.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\nnue_common.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\nnue_feature_transformer.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\nnue_misc.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\nnue\simd.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\numa.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\perft.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\position.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\score.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\search.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\shm.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\shm_linux.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\syzygy\tbprobe.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\thread.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\thread_win32_osx.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\timeman.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\tt.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\tune.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\types.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\uci.h">
+      <Filter>Stockfish</Filter>
+    </ClInclude>
+    <ClInclude Include="stockfish\ucioption.h">
+      <Filter>Stockfish</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -253,9 +244,6 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\.gitignore" />
-    <None Include="..\..\..\stockfish\src\Makefile">
-      <Filter>Stockfish</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="IP.txt" />
