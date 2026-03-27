@@ -200,6 +200,7 @@ private:
             if (board.makeMove(lastMove)) 
             {
                 to_updateUI.store(true);
+                to_updateUI.notify_all();
                 return;
             }
         }
@@ -336,8 +337,11 @@ private:
                 Move move{};
                 message_to_move(buffer, move);
 
-                if(board.makeMove(move))
-				    to_updateUI.store(true);
+                if (board.makeMove(move)) 
+                {
+                    to_updateUI.store(true);
+					to_updateUI.notify_all();
+                }
 
                 continue;
             }
