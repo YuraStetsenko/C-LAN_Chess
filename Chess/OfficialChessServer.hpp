@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <deque>
 #include <iostream>
 #include <memory>
@@ -11,17 +12,12 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace serverapp {
 
 using ClientId = std::uint64_t;
-
-struct Session;
-struct Match {
-    std::shared_ptr<Session> white;
-    std::shared_ptr<Session> black;
-};
 
 struct Session : std::enable_shared_from_this<Session> {
     ClientId id{};
@@ -29,17 +25,20 @@ struct Session : std::enable_shared_from_this<Session> {
     sf::TcpSocket socket;
     std::thread thread;
     std::mutex sendMutex;
-    std::atomic<bool> running{true};
+    std::atomic<bool> running{ true };
     std::weak_ptr<Session> opponent;
     bool inMatch = false;
     bool isWhite = false;
 
-    Session() { socket.setBlocking(true); }
+    Session() {
+        socket.setBlocking(true);
+    }
 };
 
 class ChessRelayServer {
 public:
-    explicit ChessRelayServer(unsigned short port) : port_(port) {}
+    explicit ChessRelayServer(unsigned short port)
+        : port_(port) {}
 
     bool start() {
         if (listener_.listen(port_) != sf::Socket::Done) {
@@ -54,17 +53,18 @@ public:
     }
 
     void stop() {
-        if (!running_.exchange(false)) return;
+        if (!running_.exchange(false))
+            return;
 
         listener_.close();
-        if (acceptThread_.joinable()) acceptThread_.join();
+        if (acceptThread_.joinable())
+            acceptThread_.join();
 
         std::vector<std::shared_ptr<Session>> sessionsCopy;
         {
             std::scoped_lock lock(mutex_);
-            for (auto& [_, s] : sessions_) {
+            for (auto& [_, s] : sessions_)
                 sessionsCopy.push_back(s);
-            }
             sessions_.clear();
             waitingQueue_.clear();
         }
@@ -75,21 +75,46 @@ public:
         }
 
         for (auto& s : sessionsCopy) {
-            if (s->thread.joinable()) s->thread.join();
+            if (s->thread.joinable())
+                s->thread.join();
         }
     }
 
-    ~ChessRelayServer() { stop(); }
+    ~ChessRelayServer() {
+        stop();
+    }
 
 private:
+    static bool recvString(sf::TcpSocket& socket, std::string& out) {
+        sf::Packet packet;
+        const auto status = socket.receive(packet);
+        if (status != sf::Socket::Done)
+            return false;
+        packet >> out;
+        return true;
+    }
+
+    static bool sendString(Session& session, const std::string& msg) {
+        sf::Packet packet;
+        packet << msg;
+        std::scoped_lock lock(session.sendMutex);
+        return session.socket.send(packet) == sf::Socket::Done;
+    }
+
+    static std::optional<std::pair<std::string, std::string>> splitCommand(const std::string& msg) {
+        const auto pos = msg.find('|');
+        if (pos == std::string::npos)
+            return std::pair{ msg, std::string{} };
+        return std::pair{ msg.substr(0, pos), msg.substr(pos + 1) };
+    }
+
     void acceptLoop() {
         while (running_.load()) {
             auto session = std::make_shared<Session>();
             const auto status = listener_.accept(session->socket);
             if (status != sf::Socket::Done) {
-                if (running_.load()) {
+                if (running_.load())
                     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                }
                 continue;
             }
 
@@ -106,29 +131,6 @@ private:
         }
     }
 
-    static bool recvString(sf::TcpSocket& socket, std::string& out) {
-        sf::Packet packet;
-        const auto status = socket.receive(packet);
-        if (status != sf::Socket::Done) return false;
-        packet >> out;
-        return true;
-    }
-
-    static bool sendString(Session& session, const std::string& msg) {
-        sf::Packet packet;
-        packet << msg;
-        std::scoped_lock lock(session.sendMutex);
-        return session.socket.send(packet) == sf::Socket::Done;
-    }
-
-    static std::optional<std::pair<std::string, std::string>> splitCommand(const std::string& msg) {
-        const auto pos = msg.find('|');
-        if (pos == std::string::npos) {
-            return std::pair<std::string, std::string>{msg, ""};
-        }
-        return std::pair<std::string, std::string>{msg.substr(0, pos), msg.substr(pos + 1)};
-    }
-
     void clientLoop(const std::shared_ptr<Session>& session) {
         sendString(*session, "WELCOME|Send HELLO|name then QUEUE");
 
@@ -140,10 +142,13 @@ private:
             }
 
             const auto cmd = splitCommand(msg);
-            if (!cmd) continue;
+            if (!cmd)
+                continue;
 
             if (cmd->first == "HELLO") {
-                session->name = cmd->second.empty() ? ("player_" + std::to_string(session->id)) : cmd->second;
+                session->name = cmd->second.empty()
+                    ? ("player_" + std::to_string(session->id))
+                    : cmd->second;
                 sendString(*session, "HELLO_OK|" + session->name);
                 continue;
             }
@@ -176,8 +181,10 @@ private:
 
     void enqueueForMatch(const std::shared_ptr<Session>& session) {
         std::shared_ptr<Session> opponent;
+
         {
             std::scoped_lock lock(mutex_);
+
             if (session->inMatch) {
                 sendString(*session, "ERROR|Already in a match");
                 return;
@@ -225,16 +232,16 @@ private:
     }
 
     void disconnectSession(const std::shared_ptr<Session>& session) {
-        if (!session->running.exchange(false)) return;
+        if (!session->running.exchange(false))
+            return;
 
         std::shared_ptr<Session> opponent;
         {
             std::scoped_lock lock(mutex_);
             sessions_.erase(session->id);
-
             waitingQueue_.erase(
                 std::remove_if(waitingQueue_.begin(), waitingQueue_.end(),
-                               [&](const std::shared_ptr<Session>& s) { return s->id == session->id; }),
+                    [&](const std::shared_ptr<Session>& s) { return s->id == session->id; }),
                 waitingQueue_.end());
 
             opponent = session->opponent.lock();
@@ -244,15 +251,12 @@ private:
             }
         }
 
-        if (opponent && opponent->running.load()) {
+        if (opponent && opponent->running.load())
             sendString(*opponent, "OPPONENT_LEFT|");
-        }
 
         session->socket.disconnect();
-
-        if (session->thread.joinable() && std::this_thread::get_id() != session->thread.get_id()) {
+        if (session->thread.joinable() && std::this_thread::get_id() != session->thread.get_id())
             session->thread.join();
-        }
 
         std::cout << "Client disconnected: id=" << session->id << "\n";
     }
@@ -260,10 +264,9 @@ private:
 private:
     unsigned short port_;
     sf::TcpListener listener_;
-    std::atomic<bool> running_{false};
+    std::atomic<bool> running_{ false };
     std::thread acceptThread_;
-    std::atomic<ClientId> nextId_{1};
-
+    std::atomic<ClientId> nextId_{ 1 };
     std::mutex mutex_;
     std::unordered_map<ClientId, std::shared_ptr<Session>> sessions_;
     std::deque<std::shared_ptr<Session>> waitingQueue_;
@@ -271,14 +274,4 @@ private:
 
 } // namespace serverapp
 
-int main() {
-    constexpr unsigned short kPort = 54000;
-    serverapp::ChessRelayServer server{kPort};
-    if (!server.start()) return 1;
 
-    std::cout << "Press ENTER to stop the server...\n";
-    std::string line;
-    std::getline(std::cin, line);
-    server.stop();
-    return 0;
-}

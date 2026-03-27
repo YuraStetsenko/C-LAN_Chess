@@ -136,7 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="OfficialChessServer.cpp" />
+    <ClCompile Include="OfficialChessServer.hpp" />
     <ClCompile Include="stockfish\benchmark.cpp" />
     <ClCompile Include="stockfish\bitboard.cpp" />
     <ClCompile Include="stockfish\engine.cpp" />
@@ -162,14 +162,13 @@
     <ClCompile Include="stockfish\ucioption.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ChessBoard.hpp" />
     <ClInclude Include="ChessApp.hpp" />
+    <ClInclude Include="ChessBoard.hpp" />
     <ClInclude Include="ChessPiece.hpp" />
     <ClInclude Include="ChessUI.hpp" />
-    <ClInclude Include="OfficialRoom.hpp" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Room.hpp" />
     <ClInclude Include="Move.hpp" />
+    <ClInclude Include="Room.hpp" />
     <ClInclude Include="StockfishRunner.hpp" />
     <ClInclude Include="stockfish\benchmark.h" />
     <ClInclude Include="stockfish\bitboard.h" />
