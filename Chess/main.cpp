@@ -35,11 +35,11 @@ int main(int argc, char* argv[]) {
 			
 			if (game.getCurrentPlayersColor() != game.isWhitesMove() && (playMode == ChessApp::LocalNetwork || playMode == ChessApp::OfficialServer))
 			{
-				game.getReffUpdateUI().wait(false);
+				game.getPUpdateUI()->wait(false);
 				window.clear(sf::Color::Black);
 				game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
 				window.display();
-				game.getReffUpdateUI().store(false);
+				game.getPUpdateUI()->store(false);
 			}
 
 			if (event.type == sf::Event::MouseButtonPressed)

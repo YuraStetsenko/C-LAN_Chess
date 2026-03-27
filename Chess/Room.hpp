@@ -167,8 +167,11 @@ private:
                     char buffer[64]{};
                     std::strncpy(buffer, message.c_str(), sizeof(buffer) - 1);
                     message_to_move(buffer, lastMove);
-                    if (board.makeMove(lastMove))
+                    if (board.makeMove(lastMove)) {
+                        to_updateUI.store(true);
+                        to_updateUI.notify_all();
                         return;
+                    }
                 }
 
                 ++it;

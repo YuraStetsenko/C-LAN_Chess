@@ -394,7 +394,7 @@ public:
         return result;
     }
 
-    std::atomic<bool>& getReffUpdateUI(){ return pRoom->to_updateUI; }
+    std::atomic<bool>* getPUpdateUI(){ return &pRoom->to_updateUI; }
 };
 
 
