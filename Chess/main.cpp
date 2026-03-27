@@ -33,19 +33,14 @@ int main(int argc, char* argv[]) {
 				window.close();
 			}
 			
-			if (playMode == ChessApp::LocalNetwork || playMode == ChessApp::OfficialServer)
-				if (event.type == sf::Event::GainedFocus)
-				{
-					window.clear(sf::Color::Black);
-					game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
-					window.display();
-				}
-				else if (event.type == sf::Event::LostFocus)
-				{
-					window.clear(sf::Color::Black);
-					game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
-					window.display();
-				}
+			if (game.getCurrentPlayersColor() != game.isWhitesMove() && (playMode == ChessApp::LocalNetwork || playMode == ChessApp::OfficialServer))
+			{
+				game.refUpdateUI.wait(true);
+				window.clear(sf::Color::Black);
+				game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
+				window.display();
+				game.refUpdateUI.store(false);
+			}
 
 			if (event.type == sf::Event::MouseButtonPressed)
 			{
@@ -56,9 +51,6 @@ int main(int argc, char* argv[]) {
 					//Applies the move if it's valid
 					if (game.tryMove())
 					{
-						window.clear(sf::Color::Black);
-						game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
-						window.display();
 
 						if (playMode == ChessApp::SingleScreen)
 							game.toggleCurrentPlayersColor();
@@ -72,18 +64,12 @@ int main(int argc, char* argv[]) {
 							
 						}
 
-
-						window.clear(sf::Color::Black);
-						game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
-						window.display();
 					}
 					break;
 
 				case ChessApp::ToRedrawUI:
 
-					window.clear(sf::Color::Black);
-					game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
-					window.display();
+
 					break;
 
 				case ChessApp::ToProcessGUI:
@@ -107,9 +93,6 @@ int main(int argc, char* argv[]) {
 						else if (playMode == ChessApp::Bot)
 							game.requestCancelMove(true);
 
-						window.clear(sf::Color::Black);
-						game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
-						window.display();
 					}
 				}
 				else if (event.key.code == sf::Keyboard::Up) 
@@ -121,9 +104,6 @@ int main(int argc, char* argv[]) {
 						else if (playMode == ChessApp::Bot)
 							game.requestCancelMove(false);
 
-						window.clear(sf::Color::Black);
-						game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
-						window.display();
 					}
 				}
 			}

@@ -25,6 +25,8 @@ public:
         OfficialServer
     };
 
+    std::atomic<bool> to_updateUI{ false };
+
 private:
     friend class ChessApp;
 
@@ -194,8 +196,12 @@ private:
             char buffer[64]{};
             std::strncpy(buffer, message.c_str(), sizeof(buffer) - 1);
             message_to_move(buffer, lastMove);
-            if (board.makeMove(lastMove))
+
+            if (board.makeMove(lastMove)) 
+            {
+                to_updateUI.store(true);
                 return;
+            }
         }
     }
 
@@ -329,7 +335,10 @@ private:
                 std::strncpy(buffer, payload.c_str(), sizeof(buffer) - 1);
                 Move move{};
                 message_to_move(buffer, move);
-                board.makeMove(move);
+
+                if(board.makeMove(move))
+				    to_updateUI.store(true);
+
                 continue;
             }
 

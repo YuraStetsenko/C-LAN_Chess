@@ -65,6 +65,7 @@ private:
     std::pair<unsigned, unsigned> toCell;
     std::pair<unsigned, unsigned> fromCell;
     short playMode = SingleScreen;
+	std::atomic<bool> to_updateUI_bot{ false };
 
 public:
     ChessApp() = delete;
@@ -95,6 +96,7 @@ public:
         delete pBoard;
     }
 
+    //TODO:: make this fucntion return void?
     Signal handleClick(sf::Event& event, bool gameIsOn = true) {
         sf::Vector2f mousePos({ (float)event.mouseButton.x, (float)event.mouseButton.y });
 
@@ -113,11 +115,21 @@ public:
                 return NoSignal;
 
             hasSelectedPiece = true;
+
+            window.clear(sf::Color::Black);
+            updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
+            window.display();
+
             return ToRedrawUI;
         }
         else if (hasSelectedPiece) {
             if (!sf::FloatRect(boardPosition, { squareSize * 8, squareSize * 8 }).contains(mousePos)) {
                 hasSelectedPiece = false;
+
+                window.clear(sf::Color::Black);
+                updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
+                window.display();
+
                 return ToRedrawUI;
             }
 
@@ -132,6 +144,11 @@ public:
             if (pBoard->getCellPtr(toCell)
                 && pBoard->getCellPtr(toCell)->white == pBoard->getCellPtr(fromCell)->white) {
                 fromCell = toCell;
+
+                window.clear(sf::Color::Black);
+                updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
+                window.display();
+
                 return ToRedrawUI;
             }
 
@@ -146,6 +163,11 @@ public:
             Move move = { fromCell, toCell, getPieceType(*pBoard, fromCell), getPieceType(*pBoard, toCell) };
             if (((playMode == LocalNetwork || playMode == OfficialServer) ? pRoom->sendMove(move) : pBoard->makeMove(move))) {
                 hasSelectedPiece = false;
+
+                window.clear(sf::Color::Black);
+                updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
+                window.display();
+
                 return true;
             }
         }
@@ -161,6 +183,11 @@ public:
                     ? pRoom->requestCancelLastMove()
                     : pBoard->cancelLastMove(undo))) {
                 hasSelectedPiece = false;
+
+                window.clear(sf::Color::Black);
+                updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
+                window.display();
+
                 return true;
             }
         }
@@ -281,9 +308,21 @@ public:
 
         return SingleScreen;
     }
+    
+    bool isWhitesMove() const {
+        return pBoard->isWhitesMove();
+	}
+
+    bool getCurrentPlayersColor() const {
+        return is_player_white;
+	}
 
     void toggleCurrentPlayersColor() {
         is_player_white = !is_player_white;
+
+        window.clear(sf::Color::Black);
+        updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
+        window.display();
     }
 
     std::string getCurrentFEN() {
@@ -346,8 +385,18 @@ public:
         if (sMove[4] != '\n')
             pBoard->setNextPromotionType(mapLetterToPieceType[std::toupper(sMove[4])]);
 
-        return pBoard->makeMove(move);
+        bool result = pBoard->makeMove(move);
+
+        window.clear(sf::Color::Black);
+        updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
+        window.display();
+
+        return result;
     }
+
+    std::atomic<bool>& refUpdateUI = pRoom ? pRoom->to_updateUI : to_updateUI_bot;
 };
+
+
 
 } // namespace myChess
