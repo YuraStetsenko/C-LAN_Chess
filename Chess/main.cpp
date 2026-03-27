@@ -32,6 +32,20 @@ int main(int argc, char* argv[]) {
 				//TODO:: closing procedure
 				window.close();
 			}
+			
+			if (playMode == ChessApp::LocalNetwork || playMode == ChessApp::OfficialServer)
+				if (event.type == sf::Event::GainedFocus)
+				{
+					window.clear(sf::Color::Black);
+					game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
+					window.display();
+				}
+				else if (event.type == sf::Event::LostFocus)
+				{
+					window.clear(sf::Color::Black);
+					game.updateUI(); //TODO:: Only call updateUI when it's triggered by user or server
+					window.display();
+				}
 
 			if (event.type == sf::Event::MouseButtonPressed)
 			{
