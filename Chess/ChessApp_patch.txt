@@ -1,0 +1,58 @@
+Minimal patch for your repo
+==========================
+
+1) Add this include in ChessApp.hpp:
+   #include "OfficialRoom.hpp"
+
+2) Replace the single room pointer with two pointers:
+   std::unique_ptr<Room> pLanRoom;
+   std::unique_ptr<OfficialRoom> pOfficialRoom;
+
+3) Replace every use of pRoom with a small helper:
+
+   auto currentBoard = [&]() -> ChessBoard* {
+       if (playMode == LocalNetwork && pLanRoom) return &pLanRoom->board;
+       if (playMode == OfficialServer && pOfficialRoom) return &pOfficialRoom->board;
+       return pBoard;
+   };
+
+   Then use currentBoard() where needed, or just keep pBoard assigned to the chosen room's board.
+
+4) In mainMenu(), implement OfficialServer case:
+
+   case OfficialServer:
+       pOfficialRoom.reset(new OfficialRoom("Yura"));
+       pBoard = &pOfficialRoom->board;
+       return OfficialServer;
+
+5) In LocalNetwork case, rename pRoom usage:
+
+   case LocalNetwork:
+       pLanRoom.reset(new Room("", "", is_host, is_player_white));
+       pBoard = &pLanRoom->board;
+       return LocalNetwork;
+
+6) In tryMove():
+
+   if (playMode == LocalNetwork)
+       ok = pLanRoom->sendMove(move);
+   else if (playMode == OfficialServer)
+       ok = pOfficialRoom->sendMove(move);
+   else
+       ok = pBoard->makeMove(move);
+
+7) requestCancelMove():
+
+   if (playMode == LocalNetwork)
+       ok = pLanRoom->requestCancelLastMove();
+   else if (playMode == OfficialServer)
+       ok = pOfficialRoom->requestCancelLastMove();
+   else
+       ok = pBoard->cancelLastMove(undo);
+
+Notes
+-----
+- This keeps your existing LAN Room untouched.
+- OfficialRoom is a thin adapter to the dedicated server.
+- The dedicated server is a relay: it forwards moves after your local client has already validated and applied them.
+- No auth/database yet. This is the smallest step that gets your current project online.

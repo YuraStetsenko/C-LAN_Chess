@@ -90,6 +90,9 @@
     <ClCompile Include="stockfish\ucioption.cpp">
       <Filter>Stockfish</Filter>
     </ClCompile>
+    <ClCompile Include="OfficialChessServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChessPiece.hpp">
@@ -233,6 +236,9 @@
     <ClInclude Include="stockfish\ucioption.h">
       <Filter>Stockfish</Filter>
     </ClInclude>
+    <ClInclude Include="OfficialRoom.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Chess.rc">
@@ -249,5 +255,6 @@
     <Text Include="IP.txt" />
     <Text Include="TODO list.txt" />
     <Text Include="Notes.txt" />
+    <Text Include="ChessApp_patch.txt" />
   </ItemGroup>
 </Project>

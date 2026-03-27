@@ -1,5 +1,8 @@
 #pragma once
 #include "Room.hpp"
+#include "OfficialRoom.hpp"
+
+
 
 namespace myChess {
 

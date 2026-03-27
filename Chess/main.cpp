@@ -1,6 +1,11 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "ChessApp.hpp"
 #include "StockfishRunner.hpp"
+#define SERVER_APP false
+#if !SERVER_APP
+
+
+
 
 using namespace myChess;
 
@@ -114,9 +119,22 @@ int main(int argc, char* argv[]) {
 	}
 }
 
+#else
+#include "OfficialChessServer.cpp"
 
 
+int main() {
+	constexpr unsigned short kPort = 54000;
+	serverapp::ChessRelayServer server{ kPort };
+	if (!server.start()) return 1;
 
+	std::cout << "Press ENTER to stop the server...\n";
+	std::string line;
+	std::getline(std::cin, line);
+	server.stop();
+	return 0;
+}
+#endif
 
 
 
