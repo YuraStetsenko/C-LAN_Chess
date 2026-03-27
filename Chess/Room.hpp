@@ -264,10 +264,16 @@ private:
 
     void handleJoin() {
         sf::TcpSocket server;
-        if (server.connect(IP_ToConnectTo_string, port) != sf::Socket::Done) {
-            std::cerr << "Couldn't connect to the server\n";
-            lastError = "Couldn't connect to the server";
-            return;
+        if (server.connect(IP_ToConnectTo_string, port) != sf::Socket::Done) 
+        {
+            IP_ToConnectTo_string = "localhost";
+
+            if (server.connect(IP_ToConnectTo_string, port) != sf::Socket::Done) 
+            {
+                std::cerr << "Couldn't connect to the server\n";
+                lastError = "Couldn't connect to the server";
+                return;
+            }
         }
 
         are_bothPlayersPresent = true;
